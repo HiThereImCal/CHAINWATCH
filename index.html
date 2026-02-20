@@ -282,17 +282,193 @@ footer{
 footer a{color:var(--accent);opacity:.3;text-decoration:none;}
 footer a:hover{opacity:.9;}
 
-/* ── RESPONSIVE ── */
-@media(max-width:1100px){.g4{grid-template-columns:repeat(2,1fr);}}
-@media(max-width:800px){
-  .sidebar{display:none;}
-  .g3{grid-template-columns:repeat(2,1fr);}
+/* ── RESPONSIVE — TABLET ── */
+@media(max-width:1100px){
   .g4{grid-template-columns:repeat(2,1fr);}
-  .blk-hdr,.blk-row,.blk-hdr-btc,.blk-row-btc{grid-template-columns:80px 1fr 55px 48px;}
-  .bl-link{display:none;}
-  .conv-grid{grid-template-columns:repeat(2,1fr);}
-  .mon-row{grid-template-columns:1fr 90px 80px 80px;}
+  .mkt-hdr,.mkt-row{grid-template-columns:24px 1fr 100px 80px 110px;}
+  .mkt-row>div:last-child,.mkt-hdr>div:last-child{display:none;}
 }
+
+/* ── RESPONSIVE — MOBILE (≤768px) ── */
+/* Everything in here is isolated to mobile — desktop is unaffected */
+@media(max-width:768px){
+
+  /* Viewport zoom fix */
+  body{ overflow-x:hidden; }
+
+  /* ── HEADER ── */
+  header{
+    padding:8px 12px;
+    flex-wrap:wrap;
+    gap:6px;
+  }
+  .logo{ font-size:11px; letter-spacing:4px; }
+  .logo-sub{ display:none; }
+  .hdr-right{
+    width:100%;
+    justify-content:space-between;
+    gap:6px;
+    flex-wrap:wrap;
+  }
+  .currency-switcher{ gap:2px; }
+  .cur-btn{ font-size:7px; padding:3px 5px; letter-spacing:1px; }
+  .font-size-ctrl{ display:none; }   /* A+/A− not useful on mobile */
+  #clock{ display:none; }
+  .live-pill{ font-size:7px; }
+  .by-cal-btn{ font-size:7px; padding:3px 6px; }
+
+  /* ── LAYOUT ── */
+  .main{ flex-direction:column; overflow:visible; }
+
+  /* ── SIDEBAR — hidden, replaced by bottom tab bar ── */
+  .sidebar{ display:none !important; }
+
+  /* ── BOTTOM TAB BAR ── */
+  .mob-tabs{
+    display:flex !important;
+    position:fixed;
+    bottom:0; left:0; right:0;
+    background:rgba(6,8,16,.98);
+    border-top:1px solid var(--border);
+    z-index:500;
+    overflow-x:auto;
+    -webkit-overflow-scrolling:touch;
+    scrollbar-width:none;
+  }
+  .mob-tabs::-webkit-scrollbar{ display:none; }
+  .mob-tab{
+    flex:0 0 auto;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    gap:2px;
+    padding:8px 12px 10px;
+    font-size:6px;
+    letter-spacing:1.5px;
+    color:var(--text);
+    text-transform:uppercase;
+    cursor:pointer;
+    border-top:2px solid transparent;
+    transition:all .15s;
+    white-space:nowrap;
+  }
+  .mob-tab.active{
+    color:var(--accent);
+    border-top-color:var(--accent);
+  }
+  .mob-tab-ico{ font-size:14px; line-height:1; }
+
+  /* ── CONTENT — add padding for fixed bottom tabs ── */
+  .content{
+    padding:12px 10px 72px;
+    overflow-y:auto;
+    overflow-x:hidden;
+    -webkit-overflow-scrolling:touch;
+  }
+
+  /* ── GRIDS ── */
+  .g2{ grid-template-columns:1fr 1fr; }
+  .g3{ grid-template-columns:1fr 1fr; }
+  .g4{ grid-template-columns:1fr 1fr; }
+
+  /* ── TILES ── */
+  .tv{ font-size:20px; }
+  .tv.sm{ font-size:16px; }
+  .tile{ padding:10px 11px; }
+
+  /* ── CHARTS ── */
+  .chart-canvas{ height:100px; }
+
+  /* ── NODE GRAPH ── */
+  .node-graph-wrap{ height:150px; }
+
+  /* ── BLOCK FEEDS — drop hash column on mobile ── */
+  .blk-hdr,.blk-row{
+    grid-template-columns:75px 1fr 45px 40px;
+    padding:6px 8px;
+    font-size:8px;
+  }
+  /* hide hash column (2nd child) */
+  .blk-hdr>div:nth-child(2),
+  .blk-row>div:nth-child(2){ display:none; }
+  .bl-link{ display:none; }
+
+  .blk-hdr-btc,.blk-row-btc{
+    grid-template-columns:70px 1fr 50px 42px;
+    padding:6px 8px;
+    font-size:8px;
+  }
+  .blk-hdr-btc>div:nth-child(2),
+  .blk-row-btc>div:nth-child(2){ display:none; }
+
+  .blk-hdr-base,.blk-row-base{
+    grid-template-columns:70px 1fr 50px 42px;
+    padding:6px 8px;
+    font-size:8px;
+  }
+  .blk-hdr-base>div:nth-child(2),
+  .blk-row-base>div:nth-child(2){ display:none; }
+
+  /* ── MARKETS TABLE — keep rank/name/price/change, drop mcap+vol ── */
+  .mkt-hdr,.mkt-row{
+    grid-template-columns:20px 1fr 90px 70px;
+    padding:7px 10px;
+    font-size:9px;
+    gap:6px;
+  }
+  .mkt-hdr>div:nth-child(5),
+  .mkt-hdr>div:nth-child(6),
+  .mkt-row>div:nth-child(5),
+  .mkt-row>div:nth-child(6){ display:none; }
+
+  /* ── STABLECOIN MONITOR ── */
+  .mon-row{
+    grid-template-columns:1fr 80px 70px;
+    padding:8px 10px;
+    font-size:9px;
+    gap:6px;
+  }
+  /* hide 4th and 5th columns */
+  .mon-row>div:nth-child(4),
+  .mon-row>div:nth-child(5){ display:none; }
+
+  /* ── CONVERSION GRID ── */
+  .conv-grid{ grid-template-columns:repeat(2,1fr); gap:6px; }
+  .conv-val{ font-size:13px; }
+
+  /* ── GAS TRACKER ── */
+  .gas-tier{ grid-template-columns:1fr; gap:8px; }
+  .gas-tier .gas-tile:nth-child(2){ order:-1; } /* put Standard first */
+  .g.g3#gas-ops-grid{ grid-template-columns:1fr 1fr; }
+
+  /* ── DEFI YIELDS ── */
+  .yield-compare{ grid-template-columns:1fr; }
+  .defi-table-hdr,.defi-table-row{
+    grid-template-columns:1fr 70px 70px 60px;
+    padding:6px 8px;
+    font-size:8px;
+    gap:6px;
+  }
+  /* hide last column (notes) */
+  .defi-table-hdr>div:last-child,
+  .defi-table-row>div:last-child{ display:none; }
+  .yield-bar-wrap{ width:50px; min-width:30px; }
+
+  /* ── SECTION HEADERS ── */
+  .sh{ margin-top:14px; flex-wrap:wrap; }
+  .sh-sub{ font-size:7px; }
+
+  /* ── FOOTER ── */
+  footer{
+    display:none; /* hidden on mobile — bottom tabs replace nav */
+  }
+
+  /* ── API RESET (shown via bottom tab) ── */
+  .api-reset-panel{ display:none; }
+}
+
+/* Tab bar hidden on desktop */
+.mob-tabs{ display:none; }
 ::-webkit-scrollbar{width:4px;}
 ::-webkit-scrollbar-thumb{background:var(--border);}
 
@@ -408,6 +584,34 @@ footer a:hover{opacity:.9;}
 </header>
 
 
+
+<!-- ── MOBILE BOTTOM TAB BAR (hidden on desktop via CSS) ── -->
+<nav class="mob-tabs" id="mob-tabs">
+  <div class="mob-tab active" onclick="showPage('overview');setMobTab(this)">
+    <span class="mob-tab-ico">◈</span>Overview
+  </div>
+  <div class="mob-tab" onclick="showPage('markets');setMobTab(this)">
+    <span class="mob-tab-ico">◉</span>Markets
+  </div>
+  <div class="mob-tab" onclick="showPage('eth');setMobTab(this)">
+    <span class="mob-tab-ico" style="color:var(--eth)">Ξ</span>ETH
+  </div>
+  <div class="mob-tab" onclick="showPage('btc');setMobTab(this)">
+    <span class="mob-tab-ico" style="color:var(--btc)">₿</span>BTC
+  </div>
+  <div class="mob-tab" onclick="showPage('base');setMobTab(this)">
+    <span class="mob-tab-ico" style="color:#2151f5">⬡</span>Base
+  </div>
+  <div class="mob-tab" onclick="showPage('stables');setMobTab(this)">
+    <span class="mob-tab-ico">◇</span>Stables
+  </div>
+  <div class="mob-tab" onclick="showPage('gas');setMobTab(this)">
+    <span class="mob-tab-ico" style="color:var(--accent3)">⛽</span>Gas
+  </div>
+  <div class="mob-tab" onclick="showPage('defi');setMobTab(this)">
+    <span class="mob-tab-ico" style="color:var(--accent)">◎</span>Yields
+  </div>
+</nav>
 
 <div class="main">
   <nav class="sidebar">
@@ -1059,9 +1263,17 @@ function showPage(name){
   document.querySelectorAll('.nav-item').forEach(function(n){
     n.classList.toggle('active', n.getAttribute('onclick')==="showPage('"+name+"')");
   });
+  // Scroll content area to top on page switch (especially important on mobile)
+  var ct=document.querySelector('.content'); if(ct) ct.scrollTop=0;
   // Draw node graphs now that the wrap element has real dimensions
   if(name==='eth' && ethBlocks.length) setTimeout(function(){ drawNodeGraph('eth', ethBlocks); }, 30);
   if(name==='btc' && btcBlocks.length) setTimeout(function(){ drawNodeGraph('btc', btcBlocks); }, 30);
+}
+
+// Keep mobile bottom tab bar in sync with active page
+function setMobTab(el){
+  document.querySelectorAll('.mob-tab').forEach(function(t){ t.classList.remove('active'); });
+  if(el) el.classList.add('active');
 }
 
 // ═══════════════════════════════════════════════════════
