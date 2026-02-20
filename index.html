@@ -1,0 +1,2442 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CHAINWATCH — Blockchain Intelligence</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Syncopate:wght@400;700&display=swap');
+
+:root {
+  --bg:#060810; --panel:#0a0e1a; --border:#1a2240;
+  --accent:#00f5c4; --accent2:#ff4d6d; --accent3:#ffd166; --accent4:#7b8cde;
+  --text:#8899bb; --bright:#ccd6f6; --grid:rgba(0,245,196,0.025);
+  --btc:#f7931a; --eth:#627eea; --sol:#9945ff;
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{
+  background:var(--bg);color:var(--text);font-family:'Share Tech Mono',monospace;
+  min-height:100vh;display:flex;flex-direction:column;
+  background-image:linear-gradient(var(--grid) 1px,transparent 1px),
+    linear-gradient(90deg,var(--grid) 1px,transparent 1px);
+  background-size:40px 40px;
+}
+
+/* ── HEADER ── */
+header{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:10px 20px;border-bottom:1px solid var(--border);
+  background:rgba(6,8,16,.98);position:sticky;top:0;z-index:200;flex-shrink:0;
+}
+.logo{font-family:'Syncopate',sans-serif;font-weight:700;font-size:14px;
+  letter-spacing:7px;color:var(--accent);text-shadow:0 0 22px rgba(0,245,196,.45);}
+.logo-sub{font-size:7px;letter-spacing:3px;color:var(--text);opacity:.4;margin-top:3px;}
+.hdr-right{display:flex;align-items:center;gap:14px;}
+.live-pill{display:flex;align-items:center;gap:6px;font-size:8px;letter-spacing:2px;color:var(--accent);}
+.live-dot{width:7px;height:7px;border-radius:50%;background:var(--accent);
+  box-shadow:0 0 10px var(--accent);animation:pulse 2s infinite;}
+@keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.35;transform:scale(.75)}}
+#clock{font-size:8px;letter-spacing:1px;opacity:.35;}
+.currency-switcher{display:flex;gap:3px;}
+.font-size-ctrl{display:flex;gap:3px;}
+.cur-btn{
+  background:transparent;border:1px solid var(--border);color:var(--text);
+  font-family:'Share Tech Mono';font-size:8px;letter-spacing:1.5px;
+  padding:4px 8px;cursor:pointer;transition:all .15s;text-transform:uppercase;
+}
+.cur-btn:hover{border-color:var(--accent);color:var(--accent);}
+.cur-btn.active{border-color:var(--accent);color:var(--accent);
+  background:rgba(0,245,196,.08);box-shadow:0 0 8px rgba(0,245,196,.12);}
+.by-cal-btn{
+  background:transparent;border:1px solid #0a66c2;color:#0a66c2;
+  font-family:'Share Tech Mono',monospace;font-size:8px;letter-spacing:1.5px;
+  padding:4px 10px;cursor:pointer;transition:all .15s;text-transform:uppercase;
+  text-decoration:none;white-space:nowrap;display:inline-block;
+}
+.by-cal-btn:hover{background:rgba(10,102,194,.12);box-shadow:0 0 8px rgba(10,102,194,.25);}
+
+
+
+/* ── LAYOUT ── */
+.main{display:flex;flex:1;overflow:hidden;min-height:0;}
+
+/* ── SIDEBAR ── */
+.sidebar{width:182px;background:var(--panel);border-right:1px solid var(--border);
+  flex-shrink:0;display:flex;flex-direction:column;overflow-y:auto;}
+.sidebar::-webkit-scrollbar{width:3px;}
+.sidebar::-webkit-scrollbar-thumb{background:var(--border);}
+.nav-sec{padding:12px 10px 4px;}
+.nav-ttl{font-family:'Syncopate',sans-serif;font-size:7px;letter-spacing:3px;
+  color:var(--accent);opacity:.45;text-transform:uppercase;margin-bottom:7px;}
+.nav-item{
+  display:flex;align-items:center;gap:8px;padding:7px 10px;
+  font-size:9px;letter-spacing:1.5px;color:var(--text);cursor:pointer;
+  border:1px solid transparent;transition:all .15s;margin-bottom:2px;
+  text-transform:uppercase;user-select:none;
+}
+.nav-item:hover{border-color:var(--border);color:var(--bright);}
+.nav-item.active{border-color:var(--accent);color:var(--accent);
+  background:rgba(0,245,196,.05);box-shadow:inset 3px 0 0 var(--accent);}
+.nav-ico{width:13px;text-align:center;font-size:11px;flex-shrink:0;}
+.s-div{height:1px;background:var(--border);margin:5px 10px;}
+.sb-status{padding:8px 10px;font-size:8px;letter-spacing:1px;}
+.sb-row{margin-bottom:5px;}
+.sb-lbl{opacity:.3;}
+.sb-val{display:block;margin-top:1px;}
+
+/* ── CONTENT ── */
+.content{flex:1;overflow-y:auto;overflow-x:hidden;padding:16px 18px 28px;}
+.content::-webkit-scrollbar{width:4px;}
+.content::-webkit-scrollbar-thumb{background:var(--border);}
+.page{display:none;}
+.page.active{display:block;}
+
+/* ── SECTION HEADER ── */
+.sh{display:flex;align-items:baseline;gap:10px;margin-bottom:11px;margin-top:18px;}
+.sh:first-child{margin-top:0;}
+.sh-label{font-family:'Syncopate',sans-serif;font-size:8px;letter-spacing:4px;
+  color:var(--accent);text-transform:uppercase;}
+.sh-sub{font-size:8px;letter-spacing:1px;color:var(--text);opacity:.3;}
+
+/* ── GRIDS ── */
+.g{display:grid;gap:10px;margin-bottom:10px;}
+.g4{grid-template-columns:repeat(4,1fr);}
+.g3{grid-template-columns:repeat(3,1fr);}
+.g2{grid-template-columns:repeat(2,1fr);}
+
+/* ── TILE ── */
+.tile{
+  background:var(--panel);border:1px solid var(--border);
+  padding:13px 15px;position:relative;overflow:hidden;
+  transition:border-color .2s,box-shadow .2s;
+}
+.tile::before{
+  content:'';position:absolute;top:0;left:0;right:0;height:1px;
+  background:linear-gradient(90deg,transparent,var(--tc,var(--accent)),transparent);
+  opacity:0;transition:opacity .2s;
+}
+.tile:hover::before{opacity:.5;}
+.tile:hover{box-shadow:0 0 18px rgba(0,245,196,.04);}
+.tile.t-btc{--tc:var(--btc);}.tile.t-btc:hover{border-color:rgba(247,147,26,.3);}
+.tile.t-eth{--tc:var(--eth);}.tile.t-eth:hover{border-color:rgba(98,126,234,.3);}
+.tile.t-sol{--tc:var(--sol);}.tile.t-sol:hover{border-color:rgba(153,69,255,.3);}
+.tile.t-gold{--tc:var(--accent3);}.tile.t-gold:hover{border-color:rgba(255,209,102,.3);}
+.tile.t-blue{--tc:var(--accent4);}.tile.t-blue:hover{border-color:rgba(123,140,222,.3);}
+.tile.t-stbl{--tc:var(--accent3);}.tile.t-stbl:hover{border-color:rgba(255,209,102,.3);}
+
+.tl{font-size:7px;letter-spacing:2.5px;text-transform:uppercase;
+  color:var(--text);opacity:.4;margin-bottom:7px;}
+.tc-badge{position:absolute;top:11px;right:13px;font-size:11px;font-weight:bold;
+  opacity:.12;font-family:'Syncopate',sans-serif;letter-spacing:2px;}
+.tv{font-size:26px;line-height:1;color:var(--bright);letter-spacing:-1px;}
+.tv.sm{font-size:19px;}
+.ts{font-size:8px;letter-spacing:1px;color:var(--text);opacity:.45;margin-top:3px;}
+.tc-chg{font-size:10px;letter-spacing:.5px;margin-top:4px;}
+.tc-chg.up{color:var(--accent);}
+.tc-chg.down{color:var(--accent2);}
+.tc-chg.flat{color:var(--text);}
+
+/* ── CHARTS ── */
+.chart-wrap{position:relative;width:100%;margin-top:10px;
+  border-top:1px solid rgba(26,34,64,.6);}
+.chart-canvas{display:block;width:100%;height:140px;}
+.chart-y-labels{position:absolute;left:3px;top:0;bottom:20px;
+  display:flex;flex-direction:column;justify-content:space-between;
+  pointer-events:none;padding:2px 0;}
+.chart-y-lbl{font-size:7px;letter-spacing:.5px;opacity:.22;white-space:nowrap;}
+
+/* ── NODE GRAPH ── */
+.node-graph-wrap{
+  width:100%;height:220px;position:relative;
+  border:1px solid var(--border);background:rgba(0,0,0,.25);
+  overflow:hidden;margin-bottom:10px;
+}
+.node-graph-canvas{display:block;width:100%;height:100%;}
+.node-tooltip{
+  position:absolute;pointer-events:none;display:none;
+  background:rgba(6,8,16,.95);border:1px solid var(--accent);
+  padding:7px 10px;font-size:8px;letter-spacing:1px;
+  color:var(--bright);min-width:200px;z-index:10;
+  box-shadow:0 0 16px rgba(0,245,196,.15);
+}
+.node-tooltip a{color:var(--accent);text-decoration:none;}
+.node-tooltip a:hover{opacity:.7;}
+
+/* ── BLOCK FEED ── */
+.blk-hdr,.blk-row{
+  display:grid;
+  grid-template-columns:90px 1fr 60px 55px 48px;
+  gap:6px;align-items:center;padding:7px 10px;font-size:9px;
+}
+.blk-hdr{font-size:7px;letter-spacing:2px;opacity:.25;
+  text-transform:uppercase;margin-bottom:3px;}
+.blk-row{background:rgba(0,0,0,.2);border:1px solid var(--border);
+  margin-bottom:3px;transition:all .15s;letter-spacing:.4px;}
+.blk-row:hover{border-color:rgba(0,245,196,.2);background:rgba(0,245,196,.015);}
+.blk-row.fresh{animation:slideIn .4s ease;}
+@keyframes slideIn{
+  from{opacity:0;transform:translateX(-8px);border-color:var(--accent)}
+  to{opacity:1;transform:translateX(0)}
+}
+.bn a{color:var(--accent);text-decoration:none;font-size:10px;}
+.bn a:hover{text-decoration:underline;}
+.bh{color:var(--text);opacity:.5;overflow:hidden;text-overflow:ellipsis;
+  white-space:nowrap;font-size:8px;}
+.bh a{color:inherit;text-decoration:none;}
+.bh a:hover{color:var(--accent4);}
+.bt{color:var(--accent3);text-align:right;}
+.ba{color:var(--text);opacity:.3;text-align:right;font-size:8px;}
+.bl-link{text-align:right;}
+.bl-link a{color:var(--accent4);font-size:8px;text-decoration:none;opacity:.7;letter-spacing:.5px;}
+.bl-link a:hover{opacity:1;color:var(--accent);}
+
+/* BTC block feed uses same classes but different explorer url */
+.blk-hdr-btc,.blk-row-btc{
+  display:grid;
+  grid-template-columns:80px 1fr 60px 55px 48px;
+  gap:6px;align-items:center;padding:7px 10px;font-size:9px;
+}
+.blk-hdr-btc{font-size:7px;letter-spacing:2px;opacity:.25;
+  text-transform:uppercase;margin-bottom:3px;}
+.blk-row-btc{background:rgba(0,0,0,.2);border:1px solid var(--border);
+  margin-bottom:3px;transition:all .15s;letter-spacing:.4px;}
+.blk-row-btc:hover{border-color:rgba(247,147,26,.25);background:rgba(247,147,26,.015);}
+.blk-row-btc.fresh{animation:slideIn .4s ease;}
+
+/* ── DOMINANCE ── */
+.dom-row{display:flex;align-items:center;gap:8px;margin-bottom:6px;font-size:9px;}
+.dom-lbl{width:34px;opacity:.7;flex-shrink:0;font-size:8px;}
+.dom-trk{flex:1;height:4px;background:var(--border);}
+.dom-fill{height:100%;transition:width 1.2s ease;}
+.dom-pct{width:36px;text-align:right;color:var(--bright);font-size:8px;}
+
+/* ── PRICE ROWS ── */
+.pr{display:flex;align-items:center;justify-content:space-between;
+  padding:8px 0;border-bottom:1px solid rgba(26,34,64,.7);}
+.pr:last-child{border-bottom:none;}
+.pr-l{display:flex;align-items:center;gap:9px;}
+.pr-rk{font-size:9px;color:var(--text);opacity:.3;width:16px;text-align:right;}
+.pr-ic{width:22px;height:22px;border-radius:50%;display:flex;align-items:center;
+  justify-content:center;font-size:10px;font-weight:bold;
+  border:1px solid var(--border);flex-shrink:0;background:rgba(0,0,0,.3);}
+.pr-nm{font-size:11px;color:var(--bright);}
+.pr-tk{font-size:7px;color:var(--text);opacity:.4;letter-spacing:1px;}
+.pr-r{text-align:right;}
+.pr-p{font-size:12px;color:var(--bright);}
+.pr-c{font-size:9px;margin-top:1px;}
+.pr-c.up{color:var(--accent);}
+.pr-c.down{color:var(--accent2);}
+
+/* ── MARKETS TABLE ── */
+.mkt-hdr,.mkt-row{
+  display:grid;grid-template-columns:24px 1fr 110px 88px 118px 118px;
+  gap:8px;align-items:center;padding:8px 12px;
+}
+.mkt-hdr{font-size:7px;letter-spacing:2px;opacity:.28;
+  text-transform:uppercase;border-bottom:1px solid var(--border);}
+.mkt-row{border-bottom:1px solid rgba(26,34,64,.4);font-size:10px;transition:background .15s;}
+.mkt-row:hover{background:rgba(0,245,196,.015);}
+.mkt-row:last-child{border-bottom:none;}
+.mr-rk{font-size:8px;opacity:.3;}
+.mr-nm{color:var(--bright);}
+.mr-tk{color:var(--text);opacity:.35;font-size:8px;margin-left:5px;}
+.mr-p{text-align:right;color:var(--bright);}
+.mr-c,.mr-mc,.mr-v{text-align:right;font-size:9px;}
+.mr-c.up{color:var(--accent);}
+.mr-c.down{color:var(--accent2);}
+.mr-mc{color:var(--text);opacity:.65;}
+.mr-v{color:var(--text);opacity:.45;}
+
+/* ── STABLE MONITOR ── */
+.mon-row{
+  display:grid;
+  grid-template-columns:1fr 90px 80px 80px 90px;
+  gap:8px;align-items:center;
+  padding:9px 12px;border-bottom:1px solid rgba(26,34,64,.5);font-size:10px;
+}
+.mon-row:last-child{border-bottom:none;}
+.mon-row.hdr{font-size:7px;letter-spacing:2px;opacity:.28;
+  text-transform:uppercase;padding:5px 12px;}
+.mon-bar-wrap{height:3px;background:var(--border);margin-top:2px;}
+.mon-bar-fill{height:100%;}
+
+/* ── CONV GRID ── */
+.conv-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:10px;}
+.conv-cell{background:rgba(0,0,0,.3);border:1px solid var(--border);padding:9px 10px;}
+.conv-cur{font-size:7px;letter-spacing:2px;opacity:.45;text-transform:uppercase;margin-bottom:4px;}
+.conv-val{font-size:15px;color:var(--bright);}
+.conv-rate{font-size:8px;opacity:.4;margin-top:2px;}
+
+/* LOADING / ERR */
+.loading{font-size:9px;letter-spacing:2px;color:var(--text);opacity:.3;
+  padding:12px;animation:blink 1.5s infinite;}
+@keyframes blink{0%,100%{opacity:.3}50%{opacity:.7}}
+.err{font-size:9px;color:var(--accent2);opacity:.7;padding:10px;letter-spacing:1px;}
+
+/* FOOTER */
+footer{
+  padding:5px 18px;font-size:8px;letter-spacing:1.5px;color:var(--border);
+  border-top:1px solid var(--border);background:var(--panel);
+  display:flex;justify-content:space-between;align-items:center;flex-shrink:0;
+}
+footer a{color:var(--accent);opacity:.3;text-decoration:none;}
+footer a:hover{opacity:.9;}
+
+/* ── RESPONSIVE ── */
+@media(max-width:1100px){.g4{grid-template-columns:repeat(2,1fr);}}
+@media(max-width:800px){
+  .sidebar{display:none;}
+  .g3{grid-template-columns:repeat(2,1fr);}
+  .g4{grid-template-columns:repeat(2,1fr);}
+  .blk-hdr,.blk-row,.blk-hdr-btc,.blk-row-btc{grid-template-columns:80px 1fr 55px 48px;}
+  .bl-link{display:none;}
+  .conv-grid{grid-template-columns:repeat(2,1fr);}
+  .mon-row{grid-template-columns:1fr 90px 80px 80px;}
+}
+::-webkit-scrollbar{width:4px;}
+::-webkit-scrollbar-thumb{background:var(--border);}
+
+/* ── REGIONAL BANNER ── */
+.api-reset-panel{
+  padding:8px 10px;margin:4px 10px;
+  border:1px solid var(--border);background:rgba(0,0,0,.2);
+}
+.api-reset-title{
+  font-size:7px;letter-spacing:2.5px;color:var(--accent);opacity:.5;
+  text-transform:uppercase;margin-bottom:6px;
+}
+.api-reset-btn{
+  display:block;width:100%;margin-bottom:4px;
+  background:transparent;border:1px solid var(--border);
+  color:var(--text);font-family:'Share Tech Mono',monospace;
+  font-size:8px;letter-spacing:1px;padding:5px 8px;
+  cursor:pointer;text-align:left;transition:all .15s;text-transform:uppercase;
+}
+.api-reset-btn:hover{border-color:var(--accent);color:var(--accent);}
+.api-reset-btn:last-child{margin-bottom:0;}
+
+/* ── GAS TRACKER ── */
+.gas-tier{
+  display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:10px;
+}
+.gas-tile{
+  background:var(--panel);border:1px solid var(--border);padding:13px 15px;
+  position:relative;overflow:hidden;
+}
+.gas-lbl{font-size:7px;letter-spacing:2.5px;text-transform:uppercase;opacity:.4;margin-bottom:6px;}
+.gas-gwei{font-size:24px;color:var(--bright);letter-spacing:-1px;line-height:1;}
+.gas-unit{font-size:9px;opacity:.4;margin-left:3px;}
+.gas-gbp{font-size:9px;color:var(--accent3);margin-top:4px;letter-spacing:.5px;}
+.gas-sub{font-size:8px;opacity:.3;margin-top:2px;letter-spacing:.5px;}
+.gas-bar{height:2px;margin-top:8px;border-radius:1px;}
+.gas-ops{display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;margin-top:10px;}
+.gas-op{background:rgba(0,0,0,.3);border:1px solid var(--border);padding:8px 10px;text-align:center;}
+.gas-op-lbl{font-size:7px;letter-spacing:1.5px;opacity:.35;text-transform:uppercase;margin-bottom:5px;}
+.gas-op-val{font-size:11px;color:var(--bright);}
+.gas-op-chg{font-size:8px;opacity:.4;margin-top:2px;}
+
+/* ── DEFI YIELDS ── */
+.yield-compare{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px;}
+.yield-section-lbl{
+  font-family:'Syncopate',sans-serif;font-size:7px;letter-spacing:3px;
+  text-transform:uppercase;margin-bottom:8px;padding-bottom:5px;
+  border-bottom:1px solid var(--border);
+}
+.yield-row{
+  display:flex;align-items:center;gap:8px;margin-bottom:7px;font-size:9px;
+  min-width:0;
+}
+.yield-name{flex:1;color:var(--text);letter-spacing:.5px;font-size:8px;min-width:0;overflow:hidden;}
+.yield-bar-wrap{width:80px;min-width:40px;height:4px;background:var(--border);flex-shrink:0;}
+.yield-bar-fill{height:100%;transition:width .8s ease;}
+.yield-pct{width:38px;text-align:right;font-size:9px;color:var(--bright);flex-shrink:0;}
+.yield-tag{font-size:6px;letter-spacing:1px;padding:1px 4px;border:1px solid;margin-left:2px;opacity:.6;flex-shrink:0;}
+.yield-tag.trad{border-color:var(--accent4);color:var(--accent4);}
+.yield-tag.defi{border-color:var(--accent);color:var(--accent);}
+.yield-tag.risk{border-color:var(--accent3);color:var(--accent3);}
+.defi-table-hdr,.defi-table-row{
+  display:grid;grid-template-columns:1fr 80px 80px 90px 60px;
+  gap:8px;align-items:center;padding:7px 12px;font-size:9px;
+}
+.defi-table-hdr{font-size:7px;letter-spacing:2px;opacity:.25;text-transform:uppercase;border-bottom:1px solid var(--border);}
+.defi-table-row{border-bottom:1px solid rgba(26,34,64,.4);transition:background .15s;}
+.defi-table-row:hover{background:rgba(0,245,196,.015);}
+.defi-table-row:last-child{border-bottom:none;}
+.dt-apy{color:var(--accent);font-weight:bold;}
+.dt-tvl{color:var(--text);opacity:.6;}
+.dt-chain{font-size:7px;opacity:.4;letter-spacing:1px;}
+.dt-risk.low{color:var(--accent);}
+.dt-risk.med{color:var(--accent3);}
+.dt-risk.high{color:var(--accent2);}
+
+/* ── BASE L2 ── */
+.base-accent{color:#2151f5;}
+.blk-hdr-base,.blk-row-base{
+  display:grid;
+  grid-template-columns:80px 1fr 60px 55px 48px;
+  gap:6px;align-items:center;padding:7px 10px;font-size:9px;
+}
+.blk-hdr-base{font-size:7px;letter-spacing:2px;opacity:.25;text-transform:uppercase;margin-bottom:3px;}
+.blk-row-base{background:rgba(0,0,0,.2);border:1px solid var(--border);margin-bottom:3px;transition:all .15s;letter-spacing:.4px;}
+.blk-row-base:hover{border-color:rgba(33,81,245,.3);background:rgba(33,81,245,.02);}
+.blk-row-base.fresh{animation:slideIn .4s ease;}
+</style>
+</head>
+<body>
+
+<header>
+  <div>
+    <div class="logo">CHAINWATCH</div>
+    <div class="logo-sub">BLOCKCHAIN INTELLIGENCE PLATFORM</div>
+  </div>
+  <div class="hdr-right">
+    <div class="currency-switcher">
+      <button class="cur-btn active" onclick="setCurrency('usd')">USD</button>
+      <button class="cur-btn" onclick="setCurrency('eur')">EUR</button>
+      <button class="cur-btn" onclick="setCurrency('gbp')">GBP</button>
+      <button class="cur-btn" onclick="setCurrency('jpy')">JPY</button>
+      <button class="cur-btn" onclick="setCurrency('btc')">BTC</button>
+    </div>
+    <div class="font-size-ctrl">
+      <button class="cur-btn" onclick="adjustFont(-1)" title="Decrease font size">A−</button>
+      <button class="cur-btn" onclick="adjustFont(1)"  title="Increase font size">A+</button>
+    </div>
+    <div class="live-pill"><div class="live-dot"></div>LIVE</div>
+    <div id="clock">—</div>
+    <a href="https://www.linkedin.com/in/callum-smith-55118071/" target="_blank" class="by-cal-btn">By Cal</a>
+  </div>
+</header>
+
+
+
+<div class="main">
+  <nav class="sidebar">
+    <div class="nav-sec">
+      <div class="nav-ttl">Views</div>
+      <div class="nav-item active" onclick="showPage('overview')">
+        <span class="nav-ico">◈</span>Overview</div>
+      <div class="nav-item" onclick="showPage('markets')">
+        <span class="nav-ico">◉</span>Markets</div>
+      <div class="nav-item" onclick="showPage('eth')">
+        <span class="nav-ico" style="color:var(--eth)">Ξ</span>ETH Chain</div>
+      <div class="nav-item" onclick="showPage('btc')">
+        <span class="nav-ico" style="color:var(--btc)">₿</span>BTC Chain</div>
+      <div class="nav-item" onclick="showPage('base')">
+        <span class="nav-ico" style="color:#2151f5">⬡</span>Base L2</div>
+      <div class="nav-item" onclick="showPage('stables')">
+        <span class="nav-ico">◇</span>Stablecoins</div>
+      <div class="nav-item" onclick="showPage('gas')">
+        <span class="nav-ico" style="color:var(--accent3)">⛽</span>Gas Tracker</div>
+      <div class="nav-item" onclick="showPage('defi')">
+        <span class="nav-ico" style="color:var(--accent)">◎</span>DeFi Yields</div>
+    </div>
+    <div class="s-div"></div>
+    <div class="api-reset-panel">
+      <div class="api-reset-title">API CONTROL</div>
+      <button class="api-reset-btn" onclick="resetErrAPIs()">↺ Reset Errors</button>
+      <button class="api-reset-btn" onclick="resetAllAPIs()">↺ Reset All</button>
+    </div>
+    <div class="s-div"></div>
+    <div class="sb-status">
+      <div class="sb-row">
+        <div class="sb-lbl">Binance</div>
+        <span class="sb-val" id="bn-status" style="color:var(--accent2)">—</span>
+      </div>
+      <div class="sb-row">
+        <div class="sb-lbl">CoinPaprika</div>
+        <span class="sb-val" id="cp-status" style="color:var(--accent2)">—</span>
+      </div>
+      <div class="sb-row">
+        <div class="sb-lbl">Etherscan</div>
+        <span class="sb-val" id="es-status" style="color:var(--accent2)">—</span>
+      </div>
+      <div class="sb-row">
+        <div class="sb-lbl">Bitcoin</div>
+        <span class="sb-val" id="bs-status" style="color:var(--accent2)">—</span>
+      </div>
+      <div class="sb-row">
+        <div class="sb-lbl">Base L2</div>
+        <span class="sb-val" id="base-status" style="color:var(--accent2)">—</span>
+      </div>
+      <div class="sb-row">
+        <div class="sb-lbl">DeFi Llama</div>
+        <span class="sb-val" id="ll-status" style="color:var(--accent2)">—</span>
+      </div>
+      <div class="sb-row">
+        <div class="sb-lbl">Currency</div>
+        <span class="sb-val" id="sb-cur" style="color:var(--accent3)">GBP</span>
+      </div>
+      <div class="sb-row" style="margin-top:8px;">
+        <div class="sb-lbl">Refreshed</div>
+        <span class="sb-val" id="sb-ts" style="opacity:.4">—</span>
+      </div>
+    </div>
+  </nav>
+
+  <div class="content">
+
+    <!-- ══════════════════ OVERVIEW ══════════════════ -->
+    <div class="page active" id="page-overview">
+      <div class="sh">
+        <span class="sh-label">Live Prices</span>
+        <span class="sh-sub" id="price-ts">Awaiting data…</span>
+      </div>
+      <div class="g g3">
+        <div class="tile t-btc">
+          <div class="tc-badge">BTC</div>
+          <div class="tl">Bitcoin</div>
+          <div class="tv" id="btc-price">—</div>
+          <div class="tc-chg flat" id="btc-chg">—</div>
+          <div class="ts" id="btc-mcap">—</div>
+          <div class="chart-wrap">
+            <canvas class="chart-canvas" id="btc-chart"></canvas>
+            <div class="chart-y-labels" id="btc-ylabels"></div>
+          </div>
+        </div>
+        <div class="tile t-eth">
+          <div class="tc-badge">ETH</div>
+          <div class="tl">Ethereum</div>
+          <div class="tv" id="eth-price">—</div>
+          <div class="tc-chg flat" id="eth-chg">—</div>
+          <div class="ts" id="eth-mcap">—</div>
+          <div class="chart-wrap">
+            <canvas class="chart-canvas" id="eth-chart"></canvas>
+            <div class="chart-y-labels" id="eth-ylabels"></div>
+          </div>
+        </div>
+        <div class="tile t-sol">
+          <div class="tc-badge">SOL</div>
+          <div class="tl">Solana</div>
+          <div class="tv" id="sol-price">—</div>
+          <div class="tc-chg flat" id="sol-chg">—</div>
+          <div class="ts" id="sol-mcap">—</div>
+          <div class="chart-wrap">
+            <canvas class="chart-canvas" id="sol-chart"></canvas>
+            <div class="chart-y-labels" id="sol-ylabels"></div>
+          </div>
+        </div>
+      </div>
+      <div class="g g4">
+        <div class="tile t-gold">
+          <div class="tl">Total Market Cap</div>
+          <div class="tv sm" id="total-mcap">—</div>
+          <div class="tc-chg flat" id="total-chg">—</div>
+        </div>
+        <div class="tile t-gold">
+          <div class="tl">24h Volume</div>
+          <div class="tv sm" id="total-vol">—</div>
+          <div class="ts">Global trading</div>
+        </div>
+        <div class="tile t-blue">
+          <div class="tl">BTC Dominance</div>
+          <div class="tv sm" id="btc-dom">—</div>
+          <div class="ts">Of total cap</div>
+        </div>
+        <div class="tile t-blue">
+          <div class="tl">ETH/BTC Ratio</div>
+          <div class="tv sm" id="eth-btc">—</div>
+          <div class="ts">Ethereum vs Bitcoin</div>
+        </div>
+      </div>
+      <div class="g g2">
+        <div class="tile">
+          <div class="tl">Market Dominance</div>
+          <div id="dom-bars" style="margin-top:10px;"><div class="loading">LOADING…</div></div>
+        </div>
+        <div class="tile">
+          <div class="tl">Top 5 Assets</div>
+          <div id="top5" style="margin-top:6px;"><div class="loading">LOADING…</div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══════════════════ MARKETS ══════════════════ -->
+    <div class="page" id="page-markets">
+      <div class="sh"><span class="sh-label">All Markets</span>
+        <span class="sh-sub">Top 20 · CoinPaprika</span></div>
+      <div class="tile" style="padding:0;">
+        <div class="mkt-hdr">
+          <div>#</div><div>Asset</div>
+          <div style="text-align:right">Price</div>
+          <div style="text-align:right">24h</div>
+          <div style="text-align:right">Market Cap</div>
+          <div style="text-align:right">Volume 24h</div>
+        </div>
+        <div id="mkt-table"><div class="loading" style="padding:20px;text-align:center">AWAITING DATA…</div></div>
+      </div>
+    </div>
+
+    <!-- ══════════════════ ETH CHAIN ══════════════════ -->
+    <div class="page" id="page-eth">
+      <div class="sh"><span class="sh-label">Ethereum Chain</span>
+        <span class="sh-sub">Live · Etherscan V2</span></div>
+
+      <div class="g g4">
+        <div class="tile t-eth">
+          <div class="tl">Latest Block</div>
+          <div class="tv sm" id="eth-blk">—</div>
+          <div class="ts" id="eth-blk-sub">—</div>
+        </div>
+        <div class="tile">
+          <div class="tl">Avg Block Time</div>
+          <div class="tv sm">~12s</div>
+          <div class="ts">Post-merge average</div>
+        </div>
+        <div class="tile t-blue">
+          <div class="tl">ETH Staked</div>
+          <div class="tv sm">~34M</div>
+          <div class="ts">~28% of supply</div>
+        </div>
+        <div class="tile">
+          <div class="tl">Active Validators</div>
+          <div class="tv sm">~1.06M</div>
+          <div class="ts">Beacon chain</div>
+        </div>
+      </div>
+
+      <!-- Node graph -->
+      <div class="sh"><span class="sh-label">Chain Visualisation</span>
+        <span class="sh-sub">Hover blocks to inspect · Click to explore</span></div>
+      <div class="node-graph-wrap" id="eth-graph-wrap">
+        <canvas class="node-graph-canvas" id="eth-graph"></canvas>
+        <div class="node-tooltip" id="eth-tooltip"></div>
+      </div>
+
+      <div class="sh"><span class="sh-label">Recent Blocks</span>
+        <span class="sh-sub">Etherscan V2 · Refreshes every 14s</span></div>
+      <div class="tile" style="padding:12px;">
+        <div class="blk-hdr">
+          <div>BLOCK</div><div>HASH</div>
+          <div style="text-align:right">TXS</div>
+          <div style="text-align:right">AGO</div>
+          <div style="text-align:right">VIEW</div>
+        </div>
+        <div id="eth-blk-feed"><div class="loading">FETCHING BLOCKS…</div></div>
+      </div>
+    </div>
+
+    <!-- ══════════════════ BTC CHAIN ══════════════════ -->
+    <div class="page" id="page-btc">
+      <div class="sh"><span class="sh-label">Bitcoin Chain</span>
+        <span class="sh-sub">Live · Blockstream Esplora API</span></div>
+
+      <div class="g g4">
+        <div class="tile t-btc">
+          <div class="tl">Latest Block</div>
+          <div class="tv sm" id="btc-blk">—</div>
+          <div class="ts" id="btc-blk-sub">—</div>
+        </div>
+        <div class="tile">
+          <div class="tl">Avg Block Time</div>
+          <div class="tv sm" id="btc-blktime">~10m</div>
+          <div class="ts" id="btc-blktime-sub">PoW target interval</div>
+        </div>
+        <div class="tile t-gold">
+          <div class="tl">Halving Progress</div>
+          <div class="tv sm" id="btc-halving">—</div>
+          <div class="ts" id="btc-halving-sub">—</div>
+        </div>
+        <div class="tile">
+          <div class="tl">Difficulty Epoch</div>
+          <div class="tv sm" id="btc-diff-epoch">—</div>
+          <div class="ts">Blocks since last adj.</div>
+        </div>
+      </div>
+
+      <!-- Node graph -->
+      <div class="sh"><span class="sh-label">Chain Visualisation</span>
+        <span class="sh-sub">Hover blocks to inspect · Click to explore</span></div>
+      <div class="node-graph-wrap" id="btc-graph-wrap">
+        <canvas class="node-graph-canvas" id="btc-graph"></canvas>
+        <div class="node-tooltip" id="btc-tooltip"></div>
+      </div>
+
+      <div class="sh"><span class="sh-label">Recent Blocks</span>
+        <span class="sh-sub">Blockstream · Refreshes every 60s</span></div>
+      <div class="tile" style="padding:12px;">
+        <div class="blk-hdr-btc">
+          <div>HEIGHT</div><div>HASH</div>
+          <div style="text-align:right">TXS</div>
+          <div style="text-align:right">AGO</div>
+          <div style="text-align:right">VIEW</div>
+        </div>
+        <div id="btc-blk-feed"><div class="loading">FETCHING BLOCKS…</div></div>
+      </div>
+    </div>
+
+    <!-- ══════════════════ STABLECOINS ══════════════════ -->
+    <div class="page" id="page-stables">
+      <div class="sh"><span class="sh-label">Stablecoins</span>
+        <span class="sh-sub">Binance · CoinPaprika · Refreshes every 60s</span></div>
+
+      <div class="g g4">
+        <div class="tile t-stbl">
+          <div class="tl">Tether · USDT</div>
+          <div class="tv sm" id="usdt-mc">—</div>
+          <div class="tc-chg flat" id="usdt-c">—</div>
+          <div class="ts" id="usdt-peg" style="margin-top:3px">—</div>
+          <div class="ts" id="usdt-vol" style="margin-top:2px">—</div>
+        </div>
+        <div class="tile t-stbl">
+          <div class="tl">USD Coin · USDC</div>
+          <div class="tv sm" id="usdc-mc">—</div>
+          <div class="tc-chg flat" id="usdc-c">—</div>
+          <div class="ts" id="usdc-peg" style="margin-top:3px">—</div>
+          <div class="ts" id="usdc-vol" style="margin-top:2px">—</div>
+        </div>
+        <div class="tile t-stbl">
+          <div class="tl">Dai · DAI</div>
+          <div class="tv sm" id="dai-mc">—</div>
+          <div class="tc-chg flat" id="dai-c">—</div>
+          <div class="ts" id="dai-peg" style="margin-top:3px">—</div>
+          <div class="ts" id="dai-vol" style="margin-top:2px">—</div>
+        </div>
+        <div class="tile t-stbl">
+          <div class="tl">FDUSD</div>
+          <div class="tv sm" id="fdusd-mc">—</div>
+          <div class="tc-chg flat" id="fdusd-c">—</div>
+          <div class="ts" id="fdusd-peg" style="margin-top:3px">—</div>
+          <div class="ts" id="fdusd-vol" style="margin-top:2px">—</div>
+        </div>
+      </div>
+
+      <div class="sh"><span class="sh-label">Monitor</span>
+        <span class="sh-sub" id="mon-sub-label">24h deviation · peg stability</span></div>
+      <div class="tile" id="stbl-monitor"><div class="loading">AWAITING DATA…</div></div>
+
+      <div class="sh"><span class="sh-label">Currency Conversions</span>
+        <span class="sh-sub">1 USDT in major currencies &amp; assets</span></div>
+      <div class="tile" id="stable-conv"><div class="loading">AWAITING DATA…</div></div>
+
+      <div class="sh"><span class="sh-label">Supply Distribution</span></div>
+      <div class="tile" id="stable-supply"><div class="loading">AWAITING DATA…</div></div>
+    </div>
+
+    <!-- ══════════════════ GAS TRACKER ══════════════════ -->
+    <div class="page" id="page-gas">
+      <div class="sh"><span class="sh-label">Gas Tracker</span>
+        <span class="sh-sub" id="gas-page-sub">Ethereum mainnet · Owlracle / Etherscan · Refreshes every 15s</span></div>
+
+      <div class="gas-tier">
+        <div class="gas-tile" style="--tc:#00f5c4;border-top:2px solid rgba(0,245,196,.4)">
+          <div class="gas-lbl">🐢 Slow · &lt;5 min</div>
+          <div><span class="gas-gwei" id="gas-slow">—</span><span class="gas-unit">Gwei</span></div>
+          <div class="gas-gbp" id="gas-slow-gbp">—</div>
+          <div class="gas-sub">Simple transfer</div>
+          <div class="gas-bar" id="gas-slow-bar" style="background:rgba(0,245,196,.3)"></div>
+        </div>
+        <div class="gas-tile" style="border-top:2px solid rgba(255,209,102,.4)">
+          <div class="gas-lbl">⚡ Standard · &lt;1 min</div>
+          <div><span class="gas-gwei" id="gas-std">—</span><span class="gas-unit">Gwei</span></div>
+          <div class="gas-gbp" id="gas-std-gbp">—</div>
+          <div class="gas-sub">Recommended</div>
+          <div class="gas-bar" id="gas-std-bar" style="background:rgba(255,209,102,.3)"></div>
+        </div>
+        <div class="gas-tile" style="border-top:2px solid rgba(255,77,109,.4)">
+          <div class="gas-lbl">🚀 Fast · &lt;30 sec</div>
+          <div><span class="gas-gwei" id="gas-fast">—</span><span class="gas-unit">Gwei</span></div>
+          <div class="gas-gbp" id="gas-fast-gbp">—</div>
+          <div class="gas-sub">Priority inclusion</div>
+          <div class="gas-bar" id="gas-fast-bar" style="background:rgba(255,77,109,.3)"></div>
+        </div>
+      </div>
+
+      <div class="sh"><span class="sh-label">Operation Costs</span>
+        <span class="sh-sub">At standard gas price · GBP equivalent</span></div>
+      <div class="g g3" id="gas-ops-grid">
+        <div class="tile"><div class="tl">ETH Transfer</div>
+          <div class="tv sm" id="gas-op-transfer">—</div>
+          <div class="ts">21,000 gas units</div></div>
+        <div class="tile"><div class="tl">ERC-20 Transfer</div>
+          <div class="tv sm" id="gas-op-erc20">—</div>
+          <div class="ts">~65,000 gas units</div></div>
+        <div class="tile"><div class="tl">Contract Deploy</div>
+          <div class="tv sm" id="gas-op-deploy">—</div>
+          <div class="ts">~500,000 gas units</div></div>
+        <div class="tile"><div class="tl">NFT Mint</div>
+          <div class="tv sm" id="gas-op-nft">—</div>
+          <div class="ts">~150,000 gas units</div></div>
+        <div class="tile"><div class="tl">Uniswap Swap</div>
+          <div class="tv sm" id="gas-op-swap">—</div>
+          <div class="ts">~130,000 gas units</div></div>
+        <div class="tile t-blue"><div class="tl">Base Transfer</div>
+          <div class="tv sm" id="gas-op-base">—</div>
+          <div class="ts">Base L2 · ~21,000 gas</div></div>
+      </div>
+
+      <div class="sh"><span class="sh-label">Why Gas Matters for Builders</span></div>
+      <div class="tile">
+        <div style="font-size:9px;letter-spacing:.5px;line-height:1.9;color:var(--text);opacity:.7">
+          Every on-chain operation consumes gas. At 15 Gwei on mainnet, a simple ETH transfer costs ~£0.50.
+          A complex DeFi interaction may cost £5–20. This directly affects your product's UX and unit economics.
+          <span style="color:var(--accent)">Base L2</span> reduces costs by 10–100× — the same transfer costs &lt;£0.01.
+          Gas prices fluctuate with network demand; the figures above update every 15 seconds.
+        </div>
+      </div>
+    </div>
+
+    <!-- ══════════════════ DEFI YIELDS ══════════════════ -->
+    <div class="page" id="page-defi">
+      <div class="sh"><span class="sh-label">DeFi vs Traditional Finance</span>
+        <span class="sh-sub">Live yields · DeFi Llama · BoE reference rate</span></div>
+
+      <div class="yield-compare">
+        <div class="tile">
+          <div class="yield-section-lbl" style="color:var(--accent4)">Traditional Finance</div>
+          <div id="yield-trad"><div class="loading">LOADING…</div></div>
+        </div>
+        <div class="tile">
+          <div class="yield-section-lbl" style="color:var(--accent)">Crypto Lending / Staking Yields</div>
+          <div id="yield-defi"><div class="loading">LOADING…</div></div>
+        </div>
+      </div>
+
+      <div class="sh"><span class="sh-label">Crypto Yield Rates by Asset</span>
+        <span class="sh-sub">Binance Earn &amp; Staking rates · Updated on load</span></div>
+      <div class="tile" style="padding:0;">
+        <div class="defi-table-hdr">
+          <div>Asset</div>
+          <div style="text-align:right">Type</div>
+          <div style="text-align:right">APY / Rate</div>
+          <div style="text-align:right">Risk</div>
+          <div style="text-align:right">Notes</div>
+        </div>
+        <div id="defi-table"><div class="loading" style="padding:20px;text-align:center">LOADING RATES…</div></div>
+      </div>
+
+      <div class="sh"><span class="sh-label">Context for Founders</span></div>
+      <div class="tile">
+        <div style="font-size:9px;letter-spacing:.5px;line-height:1.9;color:var(--text);opacity:.7">
+          DeFi yields are variable and carry smart contract risk. Higher APY typically means higher risk —
+          liquidity pool rewards fluctuate with trading volume, and lending rates shift with utilisation.
+          <span style="color:var(--accent3)">The Belfast–Dublin corridor</span> is home to growing teams building
+          regulated DeFi products that bridge these yields into compliant financial infrastructure.
+          Stablecoin lending (e.g. USDC on Aave) offers lower but more predictable returns with no price exposure.
+        </div>
+      </div>
+    </div>
+
+    <!-- ══════════════════ BASE L2 ══════════════════ -->
+    <div class="page" id="page-base">
+      <div class="sh"><span class="sh-label">Base L2</span>
+        <span class="sh-sub">Coinbase · OP Stack · Blockscout API</span></div>
+
+      <div class="g g4">
+        <div class="tile" style="border-top:2px solid rgba(33,81,245,.4)">
+          <div class="tl">Latest Block</div>
+          <div class="tv sm base-accent" id="base-blk">—</div>
+          <div class="ts" id="base-blk-sub">—</div>
+        </div>
+        <div class="tile">
+          <div class="tl">Avg Block Time</div>
+          <div class="tv sm">~2s</div>
+          <div class="ts">OP Stack target</div>
+        </div>
+        <div class="tile">
+          <div class="tl">Base Gas Price</div>
+          <div class="tv sm" id="base-gas">—</div>
+          <div class="ts" id="base-gas-sub">vs ETH mainnet</div>
+        </div>
+        <div class="tile t-blue">
+          <div class="tl">Cost Reduction</div>
+          <div class="tv sm" id="base-saving">—</div>
+          <div class="ts">vs Ethereum mainnet</div>
+        </div>
+      </div>
+
+      <div class="sh"><span class="sh-label">Recent Blocks</span>
+        <span class="sh-sub">Blockscout · base.blockscout.com · Refreshes every 10s</span></div>
+      <div class="tile" style="padding:12px;">
+        <div class="blk-hdr-base">
+          <div>HEIGHT</div><div>HASH</div>
+          <div style="text-align:right">TXS</div>
+          <div style="text-align:right">AGO</div>
+          <div style="text-align:right">VIEW</div>
+        </div>
+        <div id="base-blk-feed"><div class="loading">FETCHING BLOCKS…</div></div>
+      </div>
+
+      <div class="sh"><span class="sh-label">Why Base?</span></div>
+      <div class="tile">
+        <div style="font-size:9px;letter-spacing:.5px;line-height:1.9;color:var(--text);opacity:.7">
+          Base is a Layer 2 built by <span style="color:#2151f5">Coinbase</span> on the OP Stack.
+          It inherits Ethereum's security while reducing gas costs by 10–100× and confirming transactions in ~2 seconds.
+          For founders: Base gives you Ethereum-compatible smart contracts at a fraction of the cost,
+          backed by Coinbase's infrastructure and distribution. The
+          <span style="color:var(--accent3)">Belfast–Dublin blockchain community</span> has direct connections
+          to the Base ecosystem — an ideal deployment target for consumer-facing dApps.
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /content -->
+</div><!-- /main -->
+
+<footer>
+  <span>CHAINWATCH · BELFAST–DUBLIN BLOCKCHAIN CORRIDOR</span>
+  <span>
+    <a href="https://binance.com" target="_blank">Binance</a> ·
+    <a href="https://coinpaprika.com" target="_blank">CoinPaprika</a> ·
+    <a href="https://etherscan.io" target="_blank">Etherscan</a> ·
+    <a href="https://blockstream.info" target="_blank">Blockstream</a> ·
+    <a href="https://defillama.com" target="_blank">DeFi Llama</a> ·
+    <a href="https://base.org" target="_blank">Base</a>
+  </span>
+  <span id="footer-ts">—</span>
+</footer>
+
+<script>
+// ═══════════════════════════════════════════════════════
+//  HELPERS — defined first, no temporal dead zone
+// ═══════════════════════════════════════════════════════
+function $(id){ return document.getElementById(id); }
+function set(id,v){ var e=$(id); if(e) e.textContent=v; }
+function st(id,v,col){ var e=$(id); if(!e) return; e.textContent=v; if(col) e.style.color=col; }
+
+// ═══════════════════════════════════════════════════════
+//  CONFIG
+// ═══════════════════════════════════════════════════════
+var ES_KEY  = 'NZSGQQIFACYZN4SZKZIM2GXYY66UI155T7';
+var ES_BASE = 'https://api.etherscan.io/v2/api';
+var BS_BASE = 'https://blockstream.info/api';
+
+// Keyless public APIs
+var BN_BASE = 'https://api.binance.com/api/v3';       // Binance — prices, klines
+var ER_BASE = 'https://open.er-api.com/v6/latest';    // Exchange rates — free, no key
+var KR_BASE = 'https://api.kraken.com/0/public';       // Kraken — FX rates (CORS-open)
+
+// Binance symbol map for each currency pair (vs USDT for non-BTC, vs BTC for BTC view)
+var BN_SYMBOLS = { bitcoin:'BTCUSDT', ethereum:'ETHUSDT', solana:'SOLUSDT' };
+
+// CoinPaprika coin IDs
+var CP_IDS = {
+  bitcoin:'btc-bitcoin', ethereum:'eth-ethereum', solana:'sol-solana',
+  tether:'usdt-tether', 'usd-coin':'usdc-usd-coin', dai:'dai-dai',
+  'first-digital-usd':'fdusd-first-digital-usd'
+};
+
+var STABLE_KEYS  = ['tether','usd-coin','dai','first-digital-usd'];
+var STABLE_PFX   = ['usdt','usdc','dai','fdusd'];
+var STABLE_NAMES = ['Tether','USD Coin','Dai','FDUSD'];
+var STABLE_SYMS  = ['USDT','USDC','DAI','FDUSD'];
+
+// Binance stable pairs (all quoted in USDT or BUSD)
+var BN_STABLE_SYMBOLS = ['USDCUSDT','DAIUSDT','FDUSDUSDT'];
+
+// New APIs — all keyless
+var LL_BASE    = 'https://yields.llama.fi';          // DeFi Llama yields
+var BASE_RPC   = 'https://mainnet.base.org';          // Base L2 JSON-RPC
+var BSOUT_BASE = 'https://base.blockscout.com/api';   // Base Blockscout
+
+var CURRENCIES = {
+  usd:{symbol:'$', code:'USD'},
+  eur:{symbol:'€', code:'EUR'},
+  gbp:{symbol:'£', code:'GBP'},
+  jpy:{symbol:'¥', code:'JPY'},
+  btc:{symbol:'₿', code:'BTC'},
+};
+
+var curId     = localStorage.getItem('cg_cur') || 'gbp';
+var fxRates   = {usd:1, eur:null, gbp:null, jpy:null, btc:null};
+var priceData = {};   // keyed by coin id, {price, change24h, volume, mcap}
+var sparkData = {};   // keyed by coin id, raw USD close prices array
+var sparkTimes= {};   // keyed by coin id, unix ms timestamps matching sparkData
+var ethBlocks = [];
+var btcBlocks = [];
+var pendingGraphs = {};
+
+// Promise that resolves once FX rates have loaded at least once.
+// Has a 4s timeout fallback so the app never hangs if Kraken is unavailable.
+var _fxResolve;
+var fxReady = new Promise(function(resolve){ _fxResolve = resolve; });
+setTimeout(function(){
+  // If Kraken hasn't responded in 4s, resolve anyway so prices display in USD fallback
+  if(_fxResolve){ console.warn('FX rates timeout — falling back to USD'); _fxResolve(); _fxResolve=null; }
+}, 4000);
+
+// ═══════════════════════════════════════════════════════
+//  INIT UI
+// ═══════════════════════════════════════════════════════
+(function initUI(){
+  document.querySelectorAll('.cur-btn').forEach(function(b){
+    b.classList.toggle('active', b.textContent.trim().toLowerCase()===curId);
+  });
+  st('sb-cur', curId.toUpperCase(), 'var(--accent3)');
+})();
+
+function setCurrency(c){
+  curId=c; localStorage.setItem('cg_cur',c);
+  document.querySelectorAll('.cur-btn').forEach(function(b){
+    b.classList.toggle('active', b.textContent.trim().toLowerCase()===c);
+  });
+  st('sb-cur', c.toUpperCase(), 'var(--accent3)');
+
+  // Redraw charts — sparkData is raw USD, toDisplay converts at draw time
+  var coinMap=[
+    {id:'bitcoin', cv:'btc'},{id:'ethereum',cv:'eth'},{id:'solana',cv:'sol'}
+  ];
+  coinMap.forEach(function(m){
+    if(sparkData[m.id]) drawChart(m.cv+'-chart',m.cv+'-ylabels',sparkData[m.id],sparkTimes[m.id]);
+  });
+
+  // Re-render all price displays without re-fetching (just reformat stored data)
+  var coins=[{id:'bitcoin',pfx:'btc'},{id:'ethereum',pfx:'eth'},{id:'solana',pfx:'sol'}];
+  coins.forEach(function(c2){
+    var d=priceData[c2.id]; if(!d) return;
+    set(c2.pfx+'-price', fmtPrice(toDisplay(d.price)));
+    if(d.mcap) set(c2.pfx+'-mcap','MCap: '+fmtBig(toDisplay(d.mcap)));
+  });
+  var btcP=priceData['bitcoin'], ethP=priceData['ethereum'];
+  if(btcP&&ethP) set('eth-btc',(ethP.price/btcP.price).toFixed(5));
+
+  // Refetch markets; re-render stables from cache (no network needed)
+  fetchMarkets();
+  if(stablesCache.length){
+    renderStableMonitor(stablesCache);
+    renderStableConv(stablesCache);
+    renderStableSupply(stablesCache);
+  } else {
+    fetchStables();
+  }
+}
+
+// ═══════════════════════════════════════════════════════
+//  API RESET CONTROLS
+// ═══════════════════════════════════════════════════════
+var API_STATUS_IDS = ['bn-status','cp-status','es-status','bs-status','base-status','ll-status'];
+var API_FETCHERS   = [fetchPrices, fetchMarkets, fetchEthBlocks, fetchBtcBlocks, fetchBaseBlocks, fetchDefiYields];
+
+function resetErrAPIs(){
+  API_STATUS_IDS.forEach(function(id, i){
+    var el=document.getElementById(id);
+    if(el && el.textContent.trim()==='ERR'){
+      st(id,'...','var(--accent3)');
+      API_FETCHERS[i]();
+    }
+  });
+}
+
+function resetAllAPIs(){
+  API_STATUS_IDS.forEach(function(id){ st(id,'...','var(--accent3)'); });
+  fetchFxRates();
+  fetchPrices();
+  fetchCharts();
+  fetchMarkets();
+  fetchStables();
+  fetchEthBlocks();
+  fetchBtcBlocks();
+  fetchGas();
+  fetchDefiYields();
+  fetchBaseBlocks();
+}
+
+// ═══════════════════════════════════════════════════════
+//  FONT SIZE
+// ═══════════════════════════════════════════════════════
+var _fontZoom = parseFloat(localStorage.getItem('cg_zoom') || '1.5');
+(function applyZoom(){ document.body.style.zoom = _fontZoom; })();
+
+function adjustFont(dir){
+  _fontZoom = Math.round(Math.max(0.7, Math.min(2.5, _fontZoom + dir * 0.1)) * 10) / 10;
+  localStorage.setItem('cg_zoom', _fontZoom);
+  document.body.style.zoom = _fontZoom;
+  // Canvases need repaint after zoom settles
+  setTimeout(function(){
+    [{id:'bitcoin',cv:'btc'},{id:'ethereum',cv:'eth'},{id:'solana',cv:'sol'}].forEach(function(m){
+      if(sparkData[m.id]) drawChart(m.cv+'-chart',m.cv+'-ylabels',sparkData[m.id],sparkTimes[m.id]);
+    });
+    if(ethBlocks.length) drawNodeGraph('eth',ethBlocks);
+    if(btcBlocks.length) drawNodeGraph('btc',btcBlocks);
+  }, 50);
+}
+
+// ═══════════════════════════════════════════════════════
+//  NAV
+// ═══════════════════════════════════════════════════════
+function showPage(name){
+  document.querySelectorAll('.page').forEach(function(p){ p.classList.remove('active'); });
+  var pg=$('page-'+name); if(pg) pg.classList.add('active');
+  document.querySelectorAll('.nav-item').forEach(function(n){
+    n.classList.toggle('active', n.getAttribute('onclick')==="showPage('"+name+"')");
+  });
+  // Draw node graphs now that the wrap element has real dimensions
+  if(name==='eth' && ethBlocks.length) setTimeout(function(){ drawNodeGraph('eth', ethBlocks); }, 30);
+  if(name==='btc' && btcBlocks.length) setTimeout(function(){ drawNodeGraph('btc', btcBlocks); }, 30);
+}
+
+// ═══════════════════════════════════════════════════════
+//  CLOCK
+// ═══════════════════════════════════════════════════════
+setInterval(function(){
+  var el=$('clock'); if(el) el.textContent=new Date().toUTCString().slice(5,25)+' UTC';
+},1000);
+
+// ═══════════════════════════════════════════════════════
+//  FORMATTING
+// ═══════════════════════════════════════════════════════
+function curSym(){ return (CURRENCIES[curId]||CURRENCIES.usd).symbol; }
+
+function fmtPrice(n){
+  if(n==null||isNaN(n)) return '—';
+  var s=curSym();
+  if(curId==='btc'){ return n<0.0001 ? s+n.toExponential(3) : s+n.toFixed(6); }
+  if(curId==='jpy') return s+Math.round(n).toLocaleString();
+  if(n>=10000) return s+Math.round(n).toLocaleString();
+  if(n>=1)     return s+n.toLocaleString('en',{minimumFractionDigits:2,maximumFractionDigits:2});
+  if(n>=0.01)  return s+n.toFixed(4);
+  return s+n.toPrecision(4);
+}
+
+function fmtBig(n){
+  if(!n&&n!==0) return '—';
+  var s=curSym();
+  if(curId==='btc'){
+    if(n>=1e6) return s+(n/1e6).toFixed(2)+'M';
+    if(n>=1e3) return s+(n/1e3).toFixed(2)+'K';
+    return s+n.toFixed(4);
+  }
+  if(n>=1e12) return s+(n/1e12).toFixed(2)+'T';
+  if(n>=1e9)  return s+(n/1e9).toFixed(2)+'B';
+  if(n>=1e6)  return s+(n/1e6).toFixed(2)+'M';
+  return s+Math.round(n).toLocaleString();
+}
+
+function fmtPct(n){
+  if(n==null||isNaN(n)) return '—';
+  return (n>0?'▲ +':n<0?'▼ ':'')+Math.abs(n).toFixed(2)+'%';
+}
+function chgCls(n){ return n>0?'up':n<0?'down':'flat'; }
+function setChg(id,pct){
+  var e=$(id); if(!e) return;
+  e.textContent=fmtPct(pct);
+  e.className='tc-chg '+chgCls(pct);
+}
+
+// ═══════════════════════════════════════════════════════
+//  CHART DRAWING — raw USD prices, converts at draw time
+// ═══════════════════════════════════════════════════════
+function fmtPriceCompact(n){
+  if(!n&&n!==0) return '';
+  var s=curSym();
+  if(curId==='btc') return s+n.toFixed(5);
+  if(curId==='jpy') return s+(n/1000).toFixed(0)+'K';
+  if(n>=1e6) return s+(n/1e6).toFixed(1)+'M';
+  if(n>=1e3) return s+(n/1e3).toFixed(1)+'K';
+  if(n>=1)   return s+n.toFixed(0);
+  return s+n.toPrecision(3);
+}
+
+// prices: raw USD array. times: unix ms array (same length, optional).
+function drawChart(canvasId, yLblId, prices, times){
+  if(!prices||prices.length<2) return;
+  var cv=$(canvasId); if(!cv) return;
+
+  // Convert all prices to display currency at draw time
+  var pts=prices.map(function(p){ return toDisplay(p)||0; });
+  if(pts.length>200) pts=pts.filter(function(_,i){ return i%Math.ceil(pts.length/200)===0; });
+
+  // Mirror downsample for times if present
+  var tms=null;
+  if(times&&times.length===prices.length){
+    tms=times;
+    if(times.length>200) tms=times.filter(function(_,i){ return i%Math.ceil(times.length/200)===0; });
+  }
+
+  var dpr=window.devicePixelRatio||1;
+  var W=cv.parentElement.offsetWidth||300, H=140;
+  cv.style.width=W+'px'; cv.style.height=H+'px';
+  cv.width=W*dpr; cv.height=H*dpr;
+  var ctx=cv.getContext('2d'); ctx.scale(dpr,dpr);
+
+  var min=Math.min.apply(null,pts), max=Math.max.apply(null,pts), range=max-min||1;
+  // Leave room at bottom for date labels
+  var PT=6, PB=18, PL=4, PR=2, GW=W-PL-PR, GH=H-PT-PB;
+  function xOf(i){ return PL+(i/(pts.length-1))*GW; }
+  function yOf(v){ return PT+(1-(v-min)/range)*GH; }
+
+  // Horizontal grid lines
+  ctx.strokeStyle='rgba(26,34,64,0.8)'; ctx.lineWidth=1;
+  for(var i=0;i<=4;i++){
+    var gy=PT+(i/4)*GH;
+    ctx.beginPath(); ctx.moveTo(PL,gy); ctx.lineTo(W-PR,gy); ctx.stroke();
+  }
+
+  // Vertical day lines + labels
+  ctx.strokeStyle='rgba(26,34,64,0.5)'; ctx.lineWidth=1;
+  if(tms&&tms.length>1){
+    var MONTHS=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+    var lastDay=-1;
+    tms.forEach(function(ms,i){
+      var d=new Date(ms);
+      var day=d.getUTCDate();
+      if(day!==lastDay){
+        lastDay=day;
+        var gx=xOf(i);
+        ctx.beginPath(); ctx.moveTo(gx,PT); ctx.lineTo(gx,H-PB); ctx.stroke();
+        // Date label
+        var lbl=MONTHS[d.getUTCMonth()]+' '+day;
+        ctx.fillStyle='rgba(136,153,187,0.35)';
+        ctx.font='7px Share Tech Mono';
+        ctx.textAlign='center'; ctx.textBaseline='top';
+        ctx.fillText(lbl, Math.min(Math.max(gx, 18), W-18), H-PB+3);
+      }
+    });
+  } else {
+    // No timestamps — just draw 7 evenly spaced verticals
+    for(var j=0;j<=7;j++){
+      var gx2=PL+(j/7)*GW;
+      ctx.beginPath(); ctx.moveTo(gx2,PT); ctx.lineTo(gx2,H-PB); ctx.stroke();
+    }
+  }
+
+  var up=pts[pts.length-1]>=pts[0];
+  var lc=up?'#00f5c4':'#ff4d6d';
+
+  // Gradient fill
+  var grad=ctx.createLinearGradient(0,PT,0,H-PB);
+  grad.addColorStop(0,lc+'28'); grad.addColorStop(0.7,lc+'0a'); grad.addColorStop(1,lc+'00');
+  ctx.beginPath();
+  pts.forEach(function(p,i){ i?ctx.lineTo(xOf(i),yOf(p)):ctx.moveTo(xOf(i),yOf(p)); });
+  ctx.lineTo(xOf(pts.length-1),H-PB); ctx.lineTo(PL,H-PB); ctx.closePath();
+  ctx.fillStyle=grad; ctx.fill();
+
+  // Price line
+  ctx.beginPath();
+  pts.forEach(function(p,i){ i?ctx.lineTo(xOf(i),yOf(p)):ctx.moveTo(xOf(i),yOf(p)); });
+  ctx.strokeStyle=lc; ctx.lineWidth=1.5; ctx.lineJoin='round';
+  ctx.shadowColor=lc; ctx.shadowBlur=4; ctx.stroke(); ctx.shadowBlur=0;
+
+  // End dot
+  var ex=xOf(pts.length-1), ey=yOf(pts[pts.length-1]);
+  ctx.beginPath(); ctx.arc(ex,ey,3,0,Math.PI*2);
+  ctx.fillStyle=lc; ctx.shadowColor=lc; ctx.shadowBlur=8; ctx.fill(); ctx.shadowBlur=0;
+
+  // Y labels
+  var yl=$(yLblId);
+  if(yl){
+    var lbls=[];
+    for(var k=0;k<=4;k++) lbls.push(fmtPriceCompact(min+((4-k)/4)*range));
+    yl.innerHTML=lbls.map(function(l){ return '<span class="chart-y-lbl">'+l+'</span>'; }).join('');
+  }
+}
+
+// ═══════════════════════════════════════════════════════
+//  NODE GRAPH — animated blockchain visualisation
+// ═══════════════════════════════════════════════════════
+var nodeGraphState = {};
+
+function drawNodeGraph(chain, blocks){
+  var canvasId = chain+'-graph';
+  var wrapId   = chain+'-graph-wrap';
+  var tipId    = chain+'-tooltip';
+  var cv=$(canvasId); var wrap=$(wrapId); var tip=$(tipId);
+  if(!cv||!wrap||!blocks||!blocks.length) return;
+
+  var dpr=window.devicePixelRatio||1;
+  var W=wrap.offsetWidth||800, H=220;
+  cv.style.width=W+'px'; cv.style.height=H+'px';
+  cv.width=W*dpr; cv.height=H*dpr;
+
+  var chainCol = chain==='eth' ? '#627eea' : '#f7931a';
+  var chainColGlow = chain==='eth' ? 'rgba(98,126,234,' : 'rgba(247,147,26,';
+
+  // Build node layout — right to left (newest on right)
+  var N=blocks.length;
+  var nodeR=22, spacing=Math.min(140, (W-80)/N);
+  var startX=W-50, cy=H/2;
+  var nodes=blocks.map(function(b,i){
+    return {
+      x: startX - i*spacing,
+      y: cy,
+      r: nodeR,
+      block: b,
+      idx: i,
+      // animation phase
+      phase: i*0.4,
+    };
+  });
+
+  // Cancel previous animation
+  if(nodeGraphState[chain]) cancelAnimationFrame(nodeGraphState[chain].raf);
+
+  var hoveredIdx=-1;
+  var t=0;
+
+  function loop(){
+    t+=0.025;
+    var ctx=cv.getContext('2d'); ctx.clearRect(0,0,W*dpr,H*dpr);
+    ctx.save(); ctx.scale(dpr,dpr);
+
+    // Draw connections (chains between nodes)
+    for(var i=0;i<nodes.length-1;i++){
+      var a=nodes[i], b=nodes[i+1];
+      var pulseFrac=(t*0.5 + i*0.2) % 1;
+      var px=b.x + (a.x-b.x)*pulseFrac;
+      var py=b.y + (a.y-b.y)*pulseFrac;
+
+      // Static line
+      ctx.beginPath();
+      ctx.moveTo(a.x,a.y); ctx.lineTo(b.x,b.y);
+      ctx.strokeStyle=chainColGlow+'0.15)';
+      ctx.lineWidth=2; ctx.stroke();
+
+      // Animated pulse dot
+      ctx.beginPath(); ctx.arc(px,py,2.5,0,Math.PI*2);
+      ctx.fillStyle=chainColGlow+'0.8)';
+      ctx.shadowColor=chainCol; ctx.shadowBlur=8; ctx.fill(); ctx.shadowBlur=0;
+    }
+
+    // Draw "more" indicator on left
+    if(nodes.length>0){
+      var last=nodes[nodes.length-1];
+      ctx.save();
+      ctx.setLineDash([3,4]);
+      ctx.beginPath(); ctx.moveTo(last.x-last.r,last.y); ctx.lineTo(last.x-last.r-30,last.y);
+      ctx.strokeStyle=chainColGlow+'0.25)'; ctx.lineWidth=1.5; ctx.stroke();
+      ctx.setLineDash([]);
+      ctx.restore();
+      ctx.fillStyle=chainColGlow+'0.3)';
+      ctx.font='9px Share Tech Mono'; ctx.fillText('…',last.x-last.r-40,last.y+4);
+    }
+
+    // Draw nodes
+    nodes.forEach(function(n,i){
+      var isHov=(i===hoveredIdx);
+      var bob=Math.sin(t+n.phase)*2; // subtle float
+      var ny=n.y+bob;
+
+      // Outer glow on hover
+      if(isHov){
+        ctx.beginPath(); ctx.arc(n.x,ny,n.r+8,0,Math.PI*2);
+        var grd=ctx.createRadialGradient(n.x,ny,n.r,n.x,ny,n.r+8);
+        grd.addColorStop(0,chainColGlow+'0.3)'); grd.addColorStop(1,chainColGlow+'0)');
+        ctx.fillStyle=grd; ctx.fill();
+      }
+
+      // Node circle
+      ctx.beginPath(); ctx.arc(n.x,ny,n.r,0,Math.PI*2);
+      var bg=ctx.createRadialGradient(n.x,ny-4,2,n.x,ny,n.r);
+      bg.addColorStop(0,chainColGlow+(isHov?'0.25':'0.12')+')');
+      bg.addColorStop(1,'rgba(6,8,16,0.9)');
+      ctx.fillStyle=bg; ctx.fill();
+      ctx.strokeStyle=chainColGlow+(isHov?'0.9':'0.5')+')';
+      ctx.lineWidth=isHov?2:1.5;
+      if(isHov){ ctx.shadowColor=chainCol; ctx.shadowBlur=16; }
+      ctx.stroke(); ctx.shadowBlur=0;
+
+      // Block number text
+      var blkNum = n.block.height!==undefined ? n.block.height : (parseInt(n.block.number,16)||'?');
+      var label='#'+String(blkNum).slice(-4); // last 4 digits to fit
+      ctx.fillStyle=isHov?chainCol:chainColGlow+'0.7)';
+      ctx.font=(isHov?'bold ':'')+'8px Share Tech Mono';
+      ctx.textAlign='center'; ctx.textBaseline='middle';
+      ctx.fillText(label,n.x,ny);
+
+      // "NEW" badge on freshest block
+      if(i===0){
+        ctx.font='6px Share Tech Mono';
+        ctx.fillStyle='rgba(0,245,196,0.7)';
+        ctx.fillText('NEW',n.x,ny-n.r-6);
+      }
+
+      // Store screen y for hit detection
+      n._ny=ny;
+    });
+
+    ctx.restore();
+    nodeGraphState[chain]={raf:requestAnimationFrame(loop)};
+  }
+  loop();
+
+  // Hit detection
+  function onMove(e){
+    var rect=cv.getBoundingClientRect();
+    var mx=(e.clientX||e.touches[0].clientX)-rect.left;
+    var my=(e.clientY||e.touches[0].clientY)-rect.top;
+    var found=-1;
+    nodes.forEach(function(n,i){
+      var dist=Math.sqrt((mx-n.x)*(mx-n.x)+(my-(n._ny||n.y))*(my-(n._ny||n.y)));
+      if(dist<n.r+4) found=i;
+    });
+    hoveredIdx=found;
+    if(found>=0 && tip){
+      var nb=nodes[found].block;
+      var blkNum=nb.height!==undefined?nb.height:(parseInt(nb.number,16)||'?');
+      var txCount=nb.tx_count!==undefined?nb.tx_count:(Array.isArray(nb.transactions)?nb.transactions.length:'?');
+      var ts=nb.timestamp||nb.time;
+      var ago=ts?Math.floor(Date.now()/1000-ts):null;
+      var agoStr=ago!==null?(ago<60?ago+'s ago':Math.floor(ago/60)+'m ago'):'';
+      var hash=nb.hash||nb.id||'';
+      var shortHash=hash?hash.slice(0,18)+'…':'—';
+      var prevHash=nb.previousblockhash||nb.prev_block||nb.parentHash||'';
+      var shortPrev=prevHash?prevHash.slice(0,12)+'…':'—';
+      var explorerUrl=chain==='eth'
+        ?'https://etherscan.io/block/'+blkNum
+        :'https://blockstream.info/block/'+hash;
+
+      tip.style.display='block';
+      tip.style.left=Math.min(mx+14, W-220)+'px';
+      tip.style.top=Math.max(my-60,4)+'px';
+      tip.innerHTML=
+        '<div style="color:'+chainCol+';margin-bottom:4px;font-size:9px;letter-spacing:2px">BLOCK #'+blkNum+'</div>'+
+        '<div style="opacity:.5;margin-bottom:2px">HASH: '+shortHash+'</div>'+
+        '<div style="opacity:.5;margin-bottom:2px">PARENT: '+shortPrev+'</div>'+
+        '<div style="opacity:.5;margin-bottom:6px">TXS: '+txCount+' &nbsp; '+agoStr+'</div>'+
+        '<a href="'+explorerUrl+'" target="_blank" style="color:'+chainCol+'">View on explorer →</a>';
+    } else if(tip){
+      tip.style.display='none';
+    }
+    cv.style.cursor=found>=0?'pointer':'default';
+  }
+
+  function onClick(e){
+    var rect=cv.getBoundingClientRect();
+    var mx=(e.clientX)-rect.left;
+    var my=(e.clientY)-rect.top;
+    nodes.forEach(function(n){
+      var dist=Math.sqrt((mx-n.x)*(mx-n.x)+(my-(n._ny||n.y))*(my-(n._ny||n.y)));
+      if(dist<n.r+4){
+        var nb=n.block;
+        var blkNum=nb.height!==undefined?nb.height:(parseInt(nb.number,16)||'?');
+        var hash=nb.hash||nb.id||'';
+        var url=chain==='eth'
+          ?'https://etherscan.io/block/'+blkNum
+          :'https://blockstream.info/block/'+hash;
+        window.open(url,'_blank');
+      }
+    });
+  }
+
+  cv.addEventListener('mousemove',onMove);
+  cv.addEventListener('click',onClick);
+  cv.addEventListener('mouseleave',function(){ hoveredIdx=-1; if(tip) tip.style.display='none'; });
+}
+
+// ═══════════════════════════════════════════════════════
+//  HELPERS — FX conversion
+// ═══════════════════════════════════════════════════════
+// Convert a USD price into the selected display currency.
+// Falls back to raw USD value if rate not yet loaded — better than showing dashes.
+function toDisplay(usdPrice){
+  if(usdPrice==null||isNaN(usdPrice)) return null;
+  if(curId==='usd') return usdPrice;
+  var rate=fxRates[curId];
+  if(!rate) return usdPrice;  // rate not loaded yet — show USD until rates arrive
+  return usdPrice*rate;
+}
+
+// ═══════════════════════════════════════════════════════
+//  FX RATES — Kraken (genuinely CORS-open, works from file://)
+//  GBPUSD = USD per GBP (~1.27)  →  GBP per USD = 1/rate
+//  EURUSD = USD per EUR (~1.09)  →  EUR per USD = 1/rate
+//  USDJPY = JPY per USD (~150)   →  correct as-is
+// ═══════════════════════════════════════════════════════
+async function fetchFxRates(){
+  var gotRates=false;
+  try{
+    var res=await fetch(KR_BASE+'/Ticker?pair=ZGBPZUSD,ZEURZUSD,USDJPY,XXBTZUSD');
+    if(!res.ok) throw new Error('HTTP '+res.status);
+    var d=await res.json();
+    if(d.error&&d.error.length) throw new Error(d.error[0]);
+    var r=d.result;
+    // Kraken uses internal pair names — try both forms
+    function kv(keys){ for(var i=0;i<keys.length;i++) if(r[keys[i]]) return parseFloat(r[keys[i]].c[0]); return null; }
+    var gbpUsd = kv(['ZGBPZUSD','GBPUSD','GBPZUSD']);       // USD per 1 GBP
+    var eurUsd = kv(['ZEURZUSD','EURUSD','EURZUSD']);       // USD per 1 EUR
+    var jpyUsd = kv(['USDJPY','ZUSDXXJPY','ZUSDJPY']);      // JPY per 1 USD
+    var btcUsd = kv(['XXBTZUSD','XBTUSD','BTCUSD']);        // USD per 1 BTC
+    console.log('Kraken result keys:', Object.keys(r));
+    console.log('gbpUsd=',gbpUsd,' eurUsd=',eurUsd,' jpyUsd=',jpyUsd);
+    if(!gbpUsd&&!eurUsd) throw new Error('No GBP/EUR rates found in: '+JSON.stringify(Object.keys(r)));
+    var btcFromPrice=priceData['bitcoin']&&priceData['bitcoin'].price;
+    fxRates={
+      usd: 1,
+      gbp: gbpUsd ? 1/gbpUsd : null,
+      eur: eurUsd ? 1/eurUsd : null,
+      jpy: jpyUsd || null,
+      btc: btcUsd ? 1/btcUsd : (btcFromPrice ? 1/btcFromPrice : null),
+    };
+    gotRates=true;
+    console.log('FX loaded via Kraken: GBP='+fxRates.gbp+' EUR='+fxRates.eur);
+  } catch(e){ console.warn('Kraken FX failed:',e); }
+
+  // Always resolve so nothing hangs
+  if(_fxResolve){ _fxResolve(); _fxResolve=null; }
+
+  if(!gotRates) return;
+
+  // Re-render everything with correct rates
+  var coins=[{id:'bitcoin',pfx:'btc'},{id:'ethereum',pfx:'eth'},{id:'solana',pfx:'sol'}];
+  coins.forEach(function(c){
+    var pd=priceData[c.id]; if(!pd) return;
+    set(c.pfx+'-price', fmtPrice(toDisplay(pd.price)));
+    if(pd.mcap) set(c.pfx+'-mcap','MCap: '+fmtBig(toDisplay(pd.mcap)));
+  });
+  [{id:'bitcoin',cv:'btc'},{id:'ethereum',cv:'eth'},{id:'solana',cv:'sol'}].forEach(function(m){
+    if(sparkData[m.id]) drawChart(m.cv+'-chart',m.cv+'-ylabels',sparkData[m.id],sparkTimes[m.id]);
+  });
+  var btcP=priceData['bitcoin'], ethP=priceData['ethereum'];
+  if(btcP&&ethP) set('eth-btc',(ethP.price/btcP.price).toFixed(5));
+  fetchMarkets();
+  fetchStables();
+  if(gasData.std) renderGas();
+}
+
+// ═══════════════════════════════════════════════════════
+//  BINANCE — PRICES + 24H STATS (keyless, CORS open)
+// ═══════════════════════════════════════════════════════
+async function fetchPrices(){
+  try{
+    var symbols=JSON.stringify(['BTCUSDT','ETHUSDT','SOLUSDT']);
+    var res=await fetch(BN_BASE+'/ticker/24hr?symbols='+encodeURIComponent(symbols));
+    if(!res.ok) throw new Error('HTTP '+res.status);
+    var tickers=await res.json();
+    st('bn-status','OK','var(--accent)');
+
+    var bySymbol={};
+    tickers.forEach(function(t){ bySymbol[t.symbol]=t; });
+
+    var display=[
+      {id:'bitcoin', pfx:'btc', sym:'BTCUSDT'},
+      {id:'ethereum',pfx:'eth', sym:'ETHUSDT'},
+      {id:'solana',  pfx:'sol', sym:'SOLUSDT'},
+    ];
+
+    // Store raw USD first — rates may not be loaded yet
+    display.forEach(function(coin){
+      var t=bySymbol[coin.sym]; if(!t) return;
+      var usdPrice=parseFloat(t.lastPrice);
+      var chg24h  =parseFloat(t.priceChangePercent);
+      var vol24h  =parseFloat(t.quoteVolume);
+      priceData[coin.id]={price:usdPrice, change24h:chg24h, volume:vol24h};
+      setChg(coin.pfx+'-chg', chg24h);
+    });
+
+    // Wait for FX rates before rendering any converted values
+    await fxReady;
+
+    display.forEach(function(coin){
+      var d=priceData[coin.id]; if(!d) return;
+      set(coin.pfx+'-price', fmtPrice(toDisplay(d.price)));
+    });
+
+    var btcUSD=priceData['bitcoin']&&priceData['bitcoin'].price;
+    var ethUSD=priceData['ethereum']&&priceData['ethereum'].price;
+    if(btcUSD&&ethUSD) set('eth-btc',(ethUSD/btcUSD).toFixed(5));
+
+    var ts=new Date().toLocaleTimeString('en-US',{hour12:false});
+    set('price-ts','7d · Binance · '+ts);
+    set('sb-ts',ts);
+    set('footer-ts',curId.toUpperCase()+' · '+ts);
+
+    // Update BTC rate now that we have its price (FX fetch runs before prices)
+    var btcPriceNow=priceData['bitcoin']&&priceData['bitcoin'].price;
+    if(btcPriceNow) fxRates.btc=1/btcPriceNow;
+
+    // Gas costs need ETH price — re-render if gas data already loaded
+    if(gasData.std) renderGas();
+  } catch(e){
+    console.error('Binance price error:',e);
+    st('bn-status','ERR','var(--accent2)');
+    set('price-ts','Binance fetch failed');
+  }
+}
+
+// ═══════════════════════════════════════════════════════
+//  BINANCE — KLINE CHARTS (7d hourly, raw USD stored)
+// ═══════════════════════════════════════════════════════
+async function fetchCharts(){
+  var coins=[
+    {id:'bitcoin', sym:'BTCUSDT', pfx:'btc'},
+    {id:'ethereum',sym:'ETHUSDT', pfx:'eth'},
+    {id:'solana',  sym:'SOLUSDT', pfx:'sol'},
+  ];
+  // Fetch all klines in parallel for speed
+  var fetches=coins.map(function(coin){
+    return fetch(BN_BASE+'/klines?symbol='+coin.sym+'&interval=1h&limit=168')
+      .then(function(r){ return r.ok?r.json():null; })
+      .catch(function(){ return null; });
+  });
+  var results=await Promise.all(fetches);
+
+  // Store raw USD — don't draw yet
+  results.forEach(function(klines,i){
+    if(!klines) return;
+    var coin=coins[i];
+    sparkData[coin.id]=klines.map(function(k){ return parseFloat(k[4]); });
+    sparkTimes[coin.id]=klines.map(function(k){ return k[0]; });
+  });
+
+  // Now wait for FX rates before drawing
+  await fxReady;
+
+  coins.forEach(function(coin){
+    if(sparkData[coin.id])
+      drawChart(coin.pfx+'-chart', coin.pfx+'-ylabels', sparkData[coin.id], sparkTimes[coin.id]);
+  });
+}
+
+// ═══════════════════════════════════════════════════════
+//  MARKETS — Binance 24hr ticker (proven CORS-open from file://)
+//  Market cap = price × hardcoded circulating supply (slow-changing)
+// ═══════════════════════════════════════════════════════
+
+// Circulating supply (millions of coins) — updated Feb 2026
+// Used only for market cap approximation: mcap = price × supply × 1e6
+var SUPPLY_M = {
+  BTCUSDT:19.8,    ETHUSDT:120.4,   BNBUSDT:145.9,  SOLUSDT:483.0,
+  XRPUSDT:57800,   DOGEUSDT:147600, ADAUSDT:35700,  AVAXUSDT:410.0,
+  TRXUSDT:86700,   LINKUSDT:638.0,  DOTUSDT:1460,   MATICUSDT:9900,
+  LTCUSDT:75.0,    BCHUSDT:19.8,    NEARUSDT:1100,  ATOMUSDT:392.0,
+  UNIUSDT:600.0,   APTUSDT:488.0,   FILUSDT:571.0,  ICPUSDT:469.0,
+};
+var MKT_COINS=[
+  {sym:'BTCUSDT', name:'Bitcoin',     tk:'BTC'},
+  {sym:'ETHUSDT', name:'Ethereum',    tk:'ETH'},
+  {sym:'BNBUSDT', name:'BNB',         tk:'BNB'},
+  {sym:'SOLUSDT', name:'Solana',      tk:'SOL'},
+  {sym:'XRPUSDT', name:'XRP',         tk:'XRP'},
+  {sym:'DOGEUSDT',name:'Dogecoin',    tk:'DOGE'},
+  {sym:'ADAUSDT', name:'Cardano',     tk:'ADA'},
+  {sym:'AVAXUSDT',name:'Avalanche',   tk:'AVAX'},
+  {sym:'TRXUSDT', name:'TRON',        tk:'TRX'},
+  {sym:'LINKUSDT',name:'Chainlink',   tk:'LINK'},
+  {sym:'DOTUSDT', name:'Polkadot',    tk:'DOT'},
+  {sym:'MATICUSDT',name:'Polygon',    tk:'MATIC'},
+  {sym:'LTCUSDT', name:'Litecoin',    tk:'LTC'},
+  {sym:'BCHUSDT', name:'Bitcoin Cash',tk:'BCH'},
+  {sym:'NEARUSDT',name:'NEAR',        tk:'NEAR'},
+  {sym:'ATOMUSDT',name:'Cosmos',      tk:'ATOM'},
+  {sym:'UNIUSDT', name:'Uniswap',     tk:'UNI'},
+  {sym:'APTUSDT', name:'Aptos',       tk:'APT'},
+  {sym:'FILUSDT', name:'Filecoin',    tk:'FIL'},
+  {sym:'ICPUSDT', name:'Internet Computer',tk:'ICP'},
+];
+
+async function fetchMarkets(){
+  try{
+    var syms=JSON.stringify(MKT_COINS.map(function(c){return c.sym;}));
+    var res=await fetch(BN_BASE+'/ticker/24hr?symbols='+encodeURIComponent(syms));
+    if(!res.ok) throw new Error('Binance HTTP '+res.status);
+    var tickers=await res.json();
+    st('cp-status','OK','var(--accent)');
+
+    // Map by symbol
+    var bySymbol={};
+    tickers.forEach(function(t){ bySymbol[t.symbol]=t; });
+
+    // Build enriched coin list with live prices + approximate mcap
+    var coins=MKT_COINS.map(function(c){
+      var t=bySymbol[c.sym]||{};
+      var price=parseFloat(t.lastPrice)||0;
+      var supplyM=SUPPLY_M[c.sym]||0;
+      var mcap=price*supplyM*1e6;
+      return {
+        sym:c.sym, name:c.name, tk:c.tk,
+        price:price,
+        chg:parseFloat(t.priceChangePercent)||0,
+        vol:parseFloat(t.quoteVolume)||0,
+        mcap:mcap,
+      };
+    }).filter(function(c){return c.price>0;});
+
+    // Sort by market cap
+    coins.sort(function(a,b){return b.mcap-a.mcap;});
+
+    // Attach mcap to priceData for BTC/ETH/SOL tiles
+    var idMap={BTCUSDT:'bitcoin',ETHUSDT:'ethereum',SOLUSDT:'solana'};
+    coins.forEach(function(c){
+      var key=idMap[c.sym]; if(!key) return;
+      if(priceData[key]) priceData[key].mcap=c.mcap;
+    });
+    ['bitcoin','ethereum','solana'].forEach(function(id){
+      var pfx=id==='bitcoin'?'btc':id==='ethereum'?'eth':'sol';
+      var pd=priceData[id];
+      if(pd&&pd.mcap) set(pfx+'-mcap','MCap: '+fmtBig(toDisplay(pd.mcap)));
+    });
+
+    // Global stats
+    var totalMcap=coins.reduce(function(s,c){return s+c.mcap;},0);
+    var totalVol =coins.reduce(function(s,c){return s+c.vol;},0);
+    var btcMcap  =coins.find(function(c){return c.sym==='BTCUSDT';});
+    var btcDom   =btcMcap&&totalMcap?(btcMcap.mcap/totalMcap*100):0;
+    set('total-mcap', fmtBig(toDisplay(totalMcap)));
+    set('total-vol',  fmtBig(toDisplay(totalVol)));
+    set('btc-dom',    btcDom.toFixed(1)+'%');
+
+    renderDominance(coins);
+    renderTop5(coins.slice(0,5));
+
+    $('mkt-table').innerHTML=coins.map(function(c,i){
+      return '<div class="mkt-row">'+
+        '<div class="mr-rk">'+(i+1)+'</div>'+
+        '<div><span class="mr-nm">'+c.name+'</span><span class="mr-tk">'+c.tk+'</span></div>'+
+        '<div class="mr-p">'+fmtPrice(toDisplay(c.price))+'</div>'+
+        '<div class="mr-c '+chgCls(c.chg)+'">'+fmtPct(c.chg)+'</div>'+
+        '<div class="mr-mc">'+fmtBig(toDisplay(c.mcap))+'</div>'+
+        '<div class="mr-v">'+fmtBig(toDisplay(c.vol))+'</div>'+
+      '</div>';
+    }).join('');
+
+  } catch(e){
+    console.error('Markets error:',e);
+    st('cp-status','ERR','var(--accent2)');
+    $('mkt-table').innerHTML='<div class="err" style="padding:16px">Markets failed: '+e.message+'</div>';
+  }
+}
+
+// ═══════════════════════════════════════════════════════
+//  BINANCE + COINPAPRIKA — STABLECOINS
+// ═══════════════════════════════════════════════════════
+async function fetchStables(){
+  try{
+    // Prices from Binance (USDC, DAI, FDUSD vs USDT)
+    // USDT itself is always ~1.0000 USD by definition
+    var bnSyms=JSON.stringify(['USDCUSDT','DAIUSDT','FDUSDUSDT']);
+    var bnRes=await fetch(BN_BASE+'/ticker/24hr?symbols='+encodeURIComponent(bnSyms));
+    var bnTickers=bnRes.ok ? await bnRes.json() : [];
+    var bnBySymbol={};
+    bnTickers.forEach(function(t){ bnBySymbol[t.symbol]=t; });
+
+    // Hardcoded approximate market caps (updated Feb 2026) — no API needed
+    // These are slow-changing and used only for the supply distribution bar
+    var STABLE_MCAP = { 'tether':145e9, 'usd-coin':44e9, 'dai':5e9, 'first-digital-usd':2.5e9 };
+    var cgById={};
+    Object.keys(STABLE_MCAP).forEach(function(k){
+      cgById[k]={ market_cap:STABLE_MCAP[k], total_volume:0, price_change_percentage_24h:0 };
+    });
+
+    // USDT is always 1.0000 USD — no Binance pair needed
+    var stableInfo=[
+      {key:'usdt', name:'Tether',  sym:'USDT', bnSym:null,         cgId:'tether'},
+      {key:'usdc', name:'USD Coin',sym:'USDC', bnSym:'USDCUSDT',   cgId:'usd-coin'},
+      {key:'dai',  name:'Dai',     sym:'DAI',  bnSym:'DAIUSDT',    cgId:'dai'},
+      {key:'fdusd',name:'FDUSD',   sym:'FDUSD',bnSym:'FDUSDUSDT',  cgId:'first-digital-usd'},
+    ];
+
+    var stablesForMonitor=[];
+    stableInfo.forEach(function(s){
+      var usdPrice=1.0; // USDT default
+      var chg24h=0, vol24h=0, mcap=0;
+
+      if(s.bnSym&&bnBySymbol[s.bnSym]){
+        var t=bnBySymbol[s.bnSym];
+        usdPrice=parseFloat(t.lastPrice)||1;
+        chg24h=parseFloat(t.priceChangePercent)||0;
+        vol24h=parseFloat(t.quoteVolume)||0;
+      }
+      if(s.cgId&&cgById[s.cgId]){
+        var cg=cgById[s.cgId];
+        mcap=cg.market_cap||0;
+        if(!s.bnSym){ chg24h=cg.price_change_percentage_24h||0; vol24h=cg.total_volume||0; }
+      }
+
+      var displayPrice=toDisplay(usdPrice);
+      var dev=(usdPrice-1)*100; // deviation from $1 peg in percent
+      var devStr=(dev>=0?'+':'')+dev.toFixed(4)+'%';
+      var devCol=Math.abs(dev)<0.05?'var(--accent)':Math.abs(dev)<0.2?'var(--accent3)':'var(--accent2)';
+
+      // Primary = market cap, secondary = peg status + volume
+      set(s.key+'-mc',  fmtBig(toDisplay(mcap)));
+      set(s.key+'-vol', 'Vol: '+fmtBig(toDisplay(vol24h)));
+      setChg(s.key+'-c', chg24h);
+      // Peg deviation as a small status line
+      var pegEl=$(s.key+'-peg');
+      if(pegEl){
+        pegEl.textContent='Peg: '+devStr;
+        pegEl.style.color=devCol;
+        pegEl.style.opacity='1';
+      }
+
+      stablesForMonitor.push({
+        name:s.name, symbol:s.sym,
+        usdPrice:usdPrice, displayPrice:displayPrice,
+        change24h:chg24h, mcap:mcap, volume:vol24h,
+      });
+    });
+
+    stablesCache=stablesForMonitor;
+    renderStableMonitor(stablesForMonitor);
+    renderStableConv(stablesForMonitor);
+    renderStableSupply(stablesForMonitor);
+  } catch(e){
+    console.error('Stables error:',e);
+  }
+}
+
+// ═══════════════════════════════════════════════════════
+//  RENDERS — DOMINANCE / TOP5
+// ═══════════════════════════════════════════════════════
+var DC=['#f7931a','#627eea','#9945ff','#ffd166','#00f5c4','#ff4d6d'];
+
+function renderDominance(coins){
+  // coins: {tk, mcap} from fetchMarkets
+  var total=coins.slice(0,6).reduce(function(s,c){return s+(c.mcap||0);},0);
+  $('dom-bars').innerHTML=coins.slice(0,6).map(function(c,i){
+    var pct=total>0?((c.mcap||0)/total*100):0;
+    return '<div class="dom-row">'+
+      '<div class="dom-lbl">'+c.tk+'</div>'+
+      '<div class="dom-trk"><div class="dom-fill" style="width:'+pct.toFixed(1)+'%;background:'+DC[i]+'"></div></div>'+
+      '<div class="dom-pct" style="color:'+DC[i]+'">'+pct.toFixed(1)+'%</div>'+
+    '</div>';
+  }).join('');
+}
+
+function renderTop5(coins){
+  // coins: {name, tk, price, chg} from fetchMarkets
+  $('top5').innerHTML=coins.map(function(c,i){
+    return '<div class="pr">'+
+      '<div class="pr-l">'+
+        '<div class="pr-rk">'+(i+1)+'</div>'+
+        '<div class="pr-ic" style="color:'+DC[i]+'">'+c.tk[0]+'</div>'+
+        '<div><div class="pr-nm">'+c.name+'</div><div class="pr-tk">'+c.tk+'</div></div>'+
+      '</div>'+
+      '<div class="pr-r">'+
+        '<div class="pr-p">'+fmtPrice(toDisplay(c.price))+'</div>'+
+        '<div class="pr-c '+chgCls(c.chg)+'">'+fmtPct(c.chg)+'</div>'+
+      '</div>'+
+    '</div>';
+  }).join('');
+}
+
+// ═══════════════════════════════════════════════════════
+//  RENDERS — STABLECOINS MONITOR
+// ═══════════════════════════════════════════════════════
+function renderStableMonitor(stables){
+  var hdr='<div class="mon-row hdr">'+
+    '<div>STABLECOIN</div>'+
+    '<div style="text-align:right">PRICE ('+curId.toUpperCase()+')</div>'+
+    '<div style="text-align:right">24H DEVIATION</div>'+
+    '<div style="text-align:right">24H CHANGE</div>'+
+    '<div style="text-align:right">MARKET CAP</div>'+
+  '</div>';
+
+  var rows=stables.map(function(s){
+    // Deviation: how far from $1.00 USD peg
+    var dev=(s.usdPrice-1)*100;
+    var devAbs=Math.abs(dev);
+    var col=devAbs<0.05?'var(--accent)':devAbs<0.2?'var(--accent3)':'var(--accent2)';
+    var barW=Math.min(100,Math.max(0,100-devAbs*20));
+    var chg=s.change24h||0;
+    return '<div class="mon-row">'+
+      '<div>'+
+        '<div style="color:var(--bright);font-size:11px">'+s.name+'</div>'+
+        '<div style="font-size:7px;opacity:.4;letter-spacing:1px">'+s.symbol+'</div>'+
+      '</div>'+
+      '<div style="text-align:right">'+fmtPrice(s.displayPrice)+'</div>'+
+      '<div style="text-align:right">'+
+        '<span style="color:'+col+';font-size:9px">'+(dev>=0?'+':'')+dev.toFixed(4)+'%</span>'+
+        '<div class="mon-bar-wrap"><div class="mon-bar-fill" style="width:'+barW+'%;background:'+col+'"></div></div>'+
+      '</div>'+
+      '<div style="text-align:right;color:'+(chg>0?'var(--accent)':'var(--accent2)')+'">'+fmtPct(chg)+'</div>'+
+      '<div style="text-align:right;font-size:9px;color:var(--text);opacity:.7">'+fmtBig(toDisplay(s.mcap))+'</div>'+
+    '</div>';
+  }).join('');
+  $('stbl-monitor').innerHTML=hdr+rows;
+}
+
+function renderStableConv(stables){
+  // Use USDT (index 0) price = ~1 USD as base
+  var ethUSD=priceData['ethereum']&&priceData['ethereum'].price;
+
+  var pairs=[
+    {cur:'USD',sym:'$',  val:(1).toFixed(4),                             name:'US Dollar'},
+    {cur:'EUR',sym:'€',  val:fxRates.eur?fxRates.eur.toFixed(4):'—',    name:'Euro'},
+    {cur:'GBP',sym:'£',  val:fxRates.gbp?fxRates.gbp.toFixed(4):'—',    name:'Brit. Pound'},
+    {cur:'JPY',sym:'¥',  val:fxRates.jpy?fxRates.jpy.toFixed(2):'—',    name:'Japanese Yen'},
+    {cur:'BTC',sym:'₿',  val:fxRates.btc?fxRates.btc.toFixed(8):'—',    name:'Bitcoin'},
+    {cur:'ETH',sym:'Ξ',  val:ethUSD?(1/ethUSD).toFixed(7):'—',           name:'Ethereum'},
+  ];
+
+  $('stable-conv').innerHTML=
+    '<div style="font-size:8px;letter-spacing:1px;opacity:.4;margin-bottom:10px">1 USDT equivalent in major currencies &amp; assets</div>'+
+    '<div class="conv-grid">'+
+    pairs.map(function(p){
+      return '<div class="conv-cell">'+
+        '<div class="conv-cur">'+p.cur+' · '+p.name+'</div>'+
+        '<div class="conv-val">'+p.sym+p.val+'</div>'+
+        '<div class="conv-rate">per 1 USDT</div>'+
+      '</div>';
+    }).join('')+
+    '</div>';
+}
+
+function renderStableSupply(stables){
+  var total=stables.reduce(function(s,c){ return s+(c.mcap||0); },0);
+  var items=stables.map(function(s,i){
+    var pct=total>0?(s.mcap/total*100):0;
+    return '<div class="dom-row">'+
+      '<div class="dom-lbl">'+s.symbol+'</div>'+
+      '<div class="dom-trk"><div class="dom-fill" style="width:'+pct.toFixed(1)+'%;background:'+DC[i]+'"></div></div>'+
+      '<div class="dom-pct" style="color:'+DC[i]+';width:auto;font-size:8px">'+
+        fmtBig(toDisplay(s.mcap))+' <span style="opacity:.4">('+pct.toFixed(1)+'%)</span>'+
+      '</div>'+
+    '</div>';
+  }).join('');
+  $('stable-supply').innerHTML=
+    '<div style="margin-bottom:10px;font-size:8px;letter-spacing:1px;opacity:.4">'+
+      'Total stablecoin cap: <span style="color:var(--bright)">'+fmtBig(toDisplay(total))+'</span>'+
+    '</div>'+items;
+}
+
+// ═══════════════════════════════════════════════════════
+//  ETHERSCAN — GAS ORACLE
+// ═══════════════════════════════════════════════════════
+var gasData = {}; // {slow, std, fast} in Gwei
+var stablesCache = []; // cached so currency switch can re-render without network
+
+async function fetchGas(){
+  var ok=false;
+
+  // Primary: Etherscan eth_gasPrice — fires at 3s after startup so blocks are done
+  try{
+    var r=await fetch(ES_BASE+'?chainid=1&module=proxy&action=eth_gasPrice&apikey='+ES_KEY);
+    if(r.ok){
+      var d=await r.json();
+      var hex=d&&d.result;
+      if(hex&&typeof hex==='string'&&hex.startsWith('0x')){
+        var wei=parseInt(hex,16);
+        if(wei>0){
+          var gwei=wei/1e9;
+          gasData={ slow:Math.round(gwei*0.8*10)/10, std:Math.round(gwei*10)/10,
+                    fast:Math.round(gwei*1.3*10)/10, base:Math.round(gwei*0.75*10)/10 };
+          ok=true;
+          console.log('Gas from Etherscan: '+gwei.toFixed(2)+' Gwei');
+        }
+      } else {
+        console.warn('Etherscan gas non-hex result:',hex);
+      }
+    }
+  } catch(e){ console.warn('Etherscan gas failed:',e); }
+
+  // Fallback: show estimated placeholder so page always renders
+  if(!ok){
+    console.warn('Gas API failed — showing 10 Gwei placeholder');
+    gasData={ slow:8, std:10, fast:13, base:7, placeholder:true };
+    ok=true;
+  }
+
+  if(ok) renderGas();
+}
+
+function renderGas(){
+  var g=gasData; if(!g.std) return;
+  var ethUSD=priceData['ethereum']&&priceData['ethereum'].price;
+  // If ETH price not loaded yet, retry in 2s (prices are still fetching)
+  if(!ethUSD){
+    setTimeout(renderGas, 2000);
+    // Still render gwei tiers without cost column
+    var maxG=g.fast||1;
+    set('gas-slow',g.slow.toFixed(1)); set('gas-std',g.std.toFixed(1)); set('gas-fast',g.fast.toFixed(1));
+    set('gas-slow-gbp','awaiting ETH price…'); set('gas-std-gbp','awaiting ETH price…'); set('gas-fast-gbp','awaiting ETH price…');
+    var sb=$('gas-slow-bar'); if(sb) sb.style.width=Math.round(g.slow/maxG*100)+'%';
+    var tb=$('gas-std-bar');  if(tb) tb.style.width=Math.round(g.std/maxG*100)+'%';
+    var fb=$('gas-fast-bar'); if(fb) fb.style.width='100%';
+    return;
+  }
+
+  function gasCost(gwei, units){
+    if(!gwei) return '—';
+    var ethCost=(gwei*units)/1e9;
+    var usdCost=ethCost*ethUSD;
+    var disp=toDisplay(usdCost);
+    if(disp==null) return '—';
+    return fmtPrice(disp);
+  }
+
+  // Tier display
+  var maxGas=g.fast||1;
+  // Show note if using placeholder data
+  if(g.placeholder){
+    var gsh=$('gas-page-sub'); if(gsh) gsh.textContent='⚠ Gas APIs unavailable — showing estimated values';
+  }
+  set('gas-slow', g.slow.toFixed(1));
+  set('gas-std',  g.std.toFixed(1));
+  set('gas-fast', g.fast.toFixed(1));
+  set('gas-slow-gbp', gasCost(g.slow,21000)+' · transfer');
+  set('gas-std-gbp',  gasCost(g.std, 21000)+' · transfer');
+  set('gas-fast-gbp', gasCost(g.fast,21000)+' · transfer');
+
+  // Bar widths relative to fast
+  var sb=$('gas-slow-bar'); if(sb) sb.style.width=Math.round(g.slow/maxGas*100)+'%';
+  var tb=$('gas-std-bar');  if(tb) tb.style.width=Math.round(g.std/maxGas*100)+'%';
+  var fb=$('gas-fast-bar'); if(fb) fb.style.width='100%';
+
+  // Operation costs at standard gas
+  set('gas-op-transfer', gasCost(g.std, 21000));
+  set('gas-op-erc20',    gasCost(g.std, 65000));
+  set('gas-op-deploy',   gasCost(g.std, 500000));
+  set('gas-op-nft',      gasCost(g.std, 150000));
+  set('gas-op-swap',     gasCost(g.std, 130000));
+
+  // Base L2 cost — Base gas is typically ~0.001 Gwei (very cheap)
+  // Use 0.005 Gwei as a conservative estimate
+  set('gas-op-base', gasCost(0.005, 21000)||'<'+fmtPrice(toDisplay(0.001)));
+
+  // Update base page gas comparison if data available
+  if($('base-gas')&&baseGasGwei!=null){
+    set('base-gas', baseGasGwei.toFixed(4)+' Gwei');
+    var ratio=g.std>0&&baseGasGwei>0 ? Math.round(g.std/baseGasGwei) : null;
+    set('base-gas-sub', 'ETH mainnet: '+g.std.toFixed(1)+' Gwei');
+    if(ratio) set('base-saving', ratio+'× cheaper');
+  }
+}
+
+// ═══════════════════════════════════════════════════════
+//  YIELDS — Traditional finance + Crypto lending/staking
+//  Crypto rates sourced from Binance Earn, Coinbase, Aave
+//  published rates — Feb 2026. BoE rate live from config.
+// ═══════════════════════════════════════════════════════
+var BOE_RATE = 4.50; // % Bank of England base rate — Feb 2026
+
+// Crypto yield data — curated from major platforms (Feb 2026)
+// format: {asset, type, apy, risk, note, color}
+// COIN_YIELDS: one entry per major coin showing best available yield + full breakdown
+// Each coin has: best{type,apy,note} and rates[] for the full table
+var COIN_YIELDS = [
+  { asset:'BTC',  name:'Bitcoin',  col:'var(--btc)', col2:'#f7931a',
+    best:{type:'Lending', apy:4.0, note:'Nexo / Ledn custody'},
+    rates:[
+      {type:'Flexible Earn', apy:1.5, risk:'Low',  note:'Binance Simple Earn'},
+      {type:'Lending',       apy:4.0, risk:'Med',  note:'Nexo / Ledn custody'},
+      {type:'Wrapped (wBTC)',apy:2.1, risk:'Med',  note:'Aave v3 wBTC supply'},
+    ]
+  },
+  { asset:'ETH',  name:'Ethereum', col:'var(--eth)', col2:'#627eea',
+    best:{type:'Staking', apy:4.1, note:'Lido stETH (liquid)'},
+    rates:[
+      {type:'Native staking',apy:3.5, risk:'Low',  note:'32 ETH validator'},
+      {type:'Liquid staking', apy:4.1, risk:'Low',  note:'Lido stETH'},
+      {type:'Lending',        apy:5.2, risk:'Med',  note:'Aave v3 supply'},
+    ]
+  },
+  { asset:'USDT', name:'Tether',   col:'var(--accent3)', col2:'#26a17b',
+    best:{type:'Lending', apy:6.5, note:'Aave v3 USDT supply'},
+    rates:[
+      {type:'Flexible Earn', apy:5.0, risk:'Med',  note:'Binance Simple Earn'},
+      {type:'Lending',       apy:6.5, risk:'Med',  note:'Aave v3 supply rate'},
+      {type:'Fixed Earn',    apy:7.2, risk:'Med',  note:'Binance Locked Earn'},
+    ]
+  },
+  { asset:'SOL',  name:'Solana',   col:'var(--sol)', col2:'#9945ff',
+    best:{type:'Staking', apy:8.1, note:'Marinade mSOL'},
+    rates:[
+      {type:'Native staking',apy:7.5, risk:'Low',  note:'Validator delegation'},
+      {type:'Liquid staking', apy:8.1, risk:'Low',  note:'Marinade mSOL'},
+      {type:'DeFi lending',   apy:9.5, risk:'High', note:'Solend supply rate'},
+    ]
+  },
+  { asset:'DOGE', name:'Dogecoin', col:'#c2a633', col2:'#c2a633',
+    best:{type:'Lending', apy:2.0, note:'Binance Simple Earn'},
+    rates:[
+      {type:'Flexible Earn', apy:2.0, risk:'Low',  note:'Binance Simple Earn'},
+      {type:'Lending',       apy:3.5, risk:'Med',  note:'Nexo DOGE lending'},
+    ]
+  },
+];
+
+// flat list for table (all rates from all coins)
+var CRYPTO_YIELDS = [];
+COIN_YIELDS.forEach(function(c){ c.rates.forEach(function(r){
+  CRYPTO_YIELDS.push({asset:c.asset,name:c.name,col:c.col,type:r.type,apy:r.apy,risk:r.risk,note:r.note});
+});});
+
+function fetchDefiYields(){
+  // No network call needed — render from curated data
+  st('ll-status','OK','var(--accent)');
+  renderDefiYields();
+}
+
+function renderDefiYields(){
+  var maxApy=Math.max.apply(null, COIN_YIELDS.map(function(c){return c.best.apy;}).concat(CRYPTO_YIELDS.map(function(y){return y.apy;}),BOE_RATE*1.5,15));
+
+  // Traditional finance panel (unchanged)
+  var tradItems=[
+    {name:'BoE Base Rate', apy:BOE_RATE, note:'Bank of England · Feb 2026', tag:'trad'},
+    {name:'UK Easy Access', apy:4.75,    note:'Best buy easy access savings', tag:'trad'},
+    {name:'UK 1yr Fixed',   apy:4.60,    note:'Best buy fixed bond', tag:'trad'},
+    {name:'NS&I Premium',   apy:4.40,    note:'Tax-free prize equivalent', tag:'trad'},
+    {name:'UK Equity ISA',  apy:7.5,     note:'FTSE AllShare 10yr avg', tag:'risk'},
+  ];
+  $('yield-trad').innerHTML=tradItems.map(function(item){
+    var barW=Math.min(100,(item.apy/maxApy*100));
+    var col=item.tag==='risk'?'var(--accent3)':'var(--accent4)';
+    return '<div class="yield-row">'+
+      '<div class="yield-name"><span style="display:block">'+item.name+'</span>'+
+        '<span style="display:block;font-size:7px;opacity:.3">'+item.note+'</span></div>'+
+      '<div class="yield-bar-wrap"><div class="yield-bar-fill" style="width:'+barW+'%;background:'+col+'"></div></div>'+
+      '<div class="yield-pct" style="color:'+col+'">'+item.apy.toFixed(2)+'%</div>'+
+      '<span class="yield-tag '+item.tag+'">'+item.tag.toUpperCase()+'</span>'+
+    '</div>';
+  }).join('');
+
+  // Right panel: one row per coin (BTC/ETH/USDT/SOL/DOGE) showing best yield
+  $('yield-defi').innerHTML=COIN_YIELDS.map(function(c){
+    var barW=Math.min(100,(c.best.apy/maxApy*100));
+    return '<div class="yield-row">'+
+      '<div class="yield-name"><span style="display:block;color:'+c.col2+'">'+c.asset+' — '+c.name+'</span>'+
+        '<span style="display:block;font-size:7px;opacity:.3">'+c.best.type+' · '+c.best.note+'</span></div>'+
+      '<div class="yield-bar-wrap"><div class="yield-bar-fill" style="width:'+barW+'%;background:'+c.col2+'"></div></div>'+
+      '<div class="yield-pct" style="color:'+c.col2+'">'+c.best.apy.toFixed(1)+'%</div>'+
+      '<span class="yield-tag defi">EARN</span>'+
+    '</div>';
+  }).join('');
+
+  // Full table sorted by asset then APY
+  $('defi-table').innerHTML=CRYPTO_YIELDS.map(function(y){
+    var riskCls=y.risk==='Low'?'low':y.risk==='Med'?'med':'high';
+    return '<div class="defi-table-row">'+
+      '<div><span style="color:'+y.col+';font-weight:bold">'+y.asset+'</span>'+
+        '<span style="color:var(--text);opacity:.5;margin-left:6px;font-size:8px">'+y.name+'</span></div>'+
+      '<div style="text-align:right;font-size:8px;opacity:.6">'+y.type+'</div>'+
+      '<div class="dt-apy" style="text-align:right">'+y.apy.toFixed(1)+'%</div>'+
+      '<div class="dt-risk '+riskCls+'" style="text-align:right">'+y.risk+'</div>'+
+      '<div style="text-align:right;font-size:7px;opacity:.4;letter-spacing:.3px">'+y.note+'</div>'+
+    '</div>';
+  }).join('');
+}
+
+// ═══════════════════════════════════════════════════════
+//  BASE L2 — BLOCKSCOUT + RPC
+// ═══════════════════════════════════════════════════════
+var baseBlocks=[];
+var baseGasGwei=null;
+
+async function fetchBaseBlocks(){
+  var blocksFetched=false;
+
+  // Step 1: Block number via RPC
+  var tipNum=null;
+  try{
+    var r1=await fetch(BASE_RPC,{method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({jsonrpc:'2.0',method:'eth_blockNumber',id:1})});
+    if(r1.ok){ var d1=await r1.json(); if(d1&&d1.result){ tipNum=parseInt(d1.result,16); set('base-blk','#'+tipNum.toLocaleString()); } }
+  } catch(_){}
+
+  // Step 2: Gas price via RPC
+  try{
+    var r2=await fetch(BASE_RPC,{method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({jsonrpc:'2.0',method:'eth_gasPrice',id:2})});
+    if(r2.ok){
+      var d2=await r2.json();
+      if(d2&&d2.result){
+        baseGasGwei=parseInt(d2.result,16)/1e9;
+        set('base-gas',baseGasGwei.toFixed(4)+' Gwei');
+        if(gasData.std&&baseGasGwei>0){
+          var ratio=Math.round(gasData.std/baseGasGwei);
+          set('base-gas-sub','ETH mainnet: '+gasData.std.toFixed(1)+' Gwei');
+          if(ratio>0) set('base-saving',ratio+'× cheaper');
+          renderGas();
+        }
+      }
+    }
+  } catch(_){}
+
+  // Step 3: Block feed from Blockscout (simple GET, no body, no query params)
+  try{
+    var r3=await fetch('https://base.blockscout.com/api/v2/blocks',{headers:{Accept:'application/json'}});
+    if(r3.ok){
+      var d3=await r3.json();
+      var items=d3.items||[];
+      if(items.length){
+        baseBlocks=items;
+        set('base-blk','#'+items[0].height.toLocaleString());
+        set('base-blk-sub',(items[0].transaction_count||0)+' txs in latest');
+        renderBaseBlockscout(items);
+        blocksFetched=true;
+      }
+    } else { console.warn('Blockscout HTTP '+r3.status); }
+  } catch(e){ console.warn('Blockscout error:',e); }
+
+  // Step 4: If Blockscout failed but we have block number, use RPC for block feed
+  if(!blocksFetched&&tipNum){
+    try{
+      var reqs=[];
+      for(var i=0;i<6;i++){
+        var hexN='0x'+(tipNum-i).toString(16);
+        reqs.push(fetch(BASE_RPC,{method:'POST',headers:{'Content-Type':'application/json'},
+          body:JSON.stringify({jsonrpc:'2.0',method:'eth_getBlockByNumber',params:[hexN,false],id:10+i})})
+          .then(function(r){return r.ok?r.json():null;}).catch(function(){return null;}));
+      }
+      var rrs=await Promise.all(reqs);
+      var rpcBlocks=rrs.filter(function(d){return d&&d.result&&d.result.number;}).map(function(d){return d.result;});
+      if(rpcBlocks.length){
+        baseBlocks=rpcBlocks;
+        set('base-blk','#'+parseInt(rpcBlocks[0].number,16).toLocaleString());
+        renderBaseRPC(rpcBlocks);
+        blocksFetched=true;
+      }
+    } catch(e){ console.warn('Base RPC fallback error:',e); }
+  }
+
+  if(blocksFetched||tipNum){
+    st('base-status','OK','var(--accent)');
+  } else {
+    st('base-status','ERR','var(--accent2)');
+    var feed=$('base-blk-feed');
+    if(feed) feed.innerHTML='<div class="err">Base unreachable (RPC + Blockscout both failed)</div>';
+  }
+}
+
+function renderBaseBlockscout(blocks){
+  var feed=$('base-blk-feed'); if(!feed) return;
+  var now=Date.now()/1000;
+  feed.innerHTML=blocks.slice(0,10).map(function(b,i){
+    var num=b.height; if(num==null) return '';
+    var ts=b.timestamp?Math.floor(new Date(b.timestamp).getTime()/1000):null;
+    var ago=ts?Math.max(0,Math.floor(now-ts)):null;
+    var agoStr=ago!=null?(ago<60?ago+'s':ago<3600?Math.floor(ago/60)+'m':Math.floor(ago/3600)+'h'):'—';
+    var h=b.hash||''; var sh=h?h.slice(0,16)+'…':'—';
+    var url='https://base.blockscout.com/block/'+num;
+    return '<div class="blk-row-base'+(i===0?' fresh':'')+'">'+
+      '<div class="bn"><a href="'+url+'" target="_blank" style="color:#2151f5">#'+num.toLocaleString()+'</a></div>'+
+      '<div class="bh"><a href="'+url+'" target="_blank">'+sh+'</a></div>'+
+      '<div class="bt">'+(b.transaction_count||'?')+'</div>'+
+      '<div class="ba">'+agoStr+'</div>'+
+      '<div class="bl-link"><a href="'+url+'" target="_blank">↗</a></div>'+
+    '</div>';
+  }).filter(Boolean).join('');
+}
+
+function renderBaseRPC(blocks){
+  var feed=$('base-blk-feed'); if(!feed) return;
+  var now=Date.now()/1000;
+  feed.innerHTML=blocks.slice(0,10).map(function(b,i){
+    var num=parseInt(b.number,16); if(isNaN(num)) return '';
+    var ts=parseInt(b.timestamp,16);
+    var ago=isNaN(ts)?null:Math.max(0,Math.floor(now-ts));
+    var agoStr=ago!=null?(ago<60?ago+'s':ago<3600?Math.floor(ago/60)+'m':Math.floor(ago/3600)+'h'):'—';
+    var h=b.hash||''; var sh=h?h.slice(0,16)+'…':'—';
+    var txs=Array.isArray(b.transactions)?b.transactions.length:'?';
+    var url='https://base.blockscout.com/block/'+num;
+    return '<div class="blk-row-base'+(i===0?' fresh':'')+'">'+
+      '<div class="bn"><a href="'+url+'" target="_blank" style="color:#2151f5">#'+num.toLocaleString()+'</a></div>'+
+      '<div class="bh"><a href="'+url+'" target="_blank">'+sh+'</a></div>'+
+      '<div class="bt">'+txs+'</div>'+
+      '<div class="ba">'+agoStr+'</div>'+
+      '<div class="bl-link"><a href="'+url+'" target="_blank">↗</a></div>'+
+    '</div>';
+  }).filter(Boolean).join('');
+}
+function sleep(ms){ return new Promise(function(r){ setTimeout(r,ms); }); }
+
+async function fetchEthBlocks(){
+  try{
+    var bnRes=await fetch(ES_BASE+'?chainid=1&module=proxy&action=eth_blockNumber&apikey='+ES_KEY);
+    if(!bnRes.ok) throw new Error('HTTP '+bnRes.status);
+    var bnData=await bnRes.json();
+    var latestHex=bnData&&bnData.result;
+    // Etherscan rate limit returns plain text like "Max rate limit reached"
+    if(!latestHex||typeof latestHex!=='string'||!latestHex.startsWith('0x')){
+      // Retry once after 2s
+      console.warn('ETH blockNumber rate limited — retrying in 2s...');
+      await sleep(2000);
+      var bnRes2=await fetch(ES_BASE+'?chainid=1&module=proxy&action=eth_blockNumber&apikey='+ES_KEY);
+      bnData=bnRes2.ok ? await bnRes2.json() : {};
+      latestHex=bnData&&bnData.result;
+      if(!latestHex||typeof latestHex!=='string'||!latestHex.startsWith('0x'))
+        throw new Error('Bad block number (rate limited)');
+    }
+
+    var latest=parseInt(latestHex,16);
+    if(isNaN(latest)) throw new Error('NaN block');
+    set('eth-blk','#'+latest.toLocaleString());
+
+    // Fetch 10 blocks sequentially in groups of 3 (Etherscan free = 5 req/sec)
+    var blocks=[];
+    for(var i=0;i<10;i++){
+      try{
+        var hexNum='0x'+(latest-i).toString(16);
+        var bRes=await fetch(ES_BASE+'?chainid=1&module=proxy&action=eth_getBlockByNumber&tag='+hexNum+'&boolean=false&apikey='+ES_KEY);
+        if(bRes.ok){
+          var bData=await bRes.json();
+          var blk=bData&&bData.result;
+          if(blk&&blk.number&&blk.hash&&blk.timestamp) blocks.push(blk);
+        }
+      } catch(_){}
+      // Pause every 3 requests to stay under rate limit
+      if(i>0&&i%3===2) await sleep(700);
+    }
+    // Already newest-first (we fetch in descending order)
+
+    ethBlocks=blocks;
+    if(blocks.length){
+      var txc=Array.isArray(blocks[0].transactions)?blocks[0].transactions.length:'?';
+      set('eth-blk-sub',txc+' txs in latest');
+    }
+
+    renderEthBlocks(blocks);
+    drawNodeGraph('eth', blocks);
+    st('es-status','OK','var(--accent)');
+  } catch(e){
+    console.error('ETH blocks:',e);
+    $('eth-blk-feed').innerHTML='<div class="err">'+e.message+'</div>';
+    st('es-status','ERR','var(--accent2)');
+  }
+}
+
+function renderEthBlocks(blocks){
+  if(!blocks||!blocks.length){ $('eth-blk-feed').innerHTML='<div class="err">No blocks</div>'; return; }
+  var now=Date.now()/1000;
+  var html=blocks.map(function(b,i){
+    var numHex=b.number, tsHex=b.timestamp;
+    if(!numHex||!tsHex) return '';
+    var num=parseInt(numHex,16), ts=parseInt(tsHex,16);
+    if(isNaN(num)||isNaN(ts)) return '';
+    var ago=Math.max(0,Math.floor(now-ts));
+    var agoStr=ago<60?ago+'s':Math.floor(ago/60)+'m '+ago%60+'s';
+    var txs=Array.isArray(b.transactions)?b.transactions.length:'?';
+    var fullHash=b.hash||'';
+    var shortHash=fullHash?fullHash.slice(0,16)+'…':'—';
+    var shortParent=b.parentHash?b.parentHash.slice(0,10)+'…':'';
+    return '<div class="blk-row'+(i===0?' fresh':'')+'">'+
+      '<div class="bn"><a href="https://etherscan.io/block/'+num+'" target="_blank">#'+num.toLocaleString()+'</a></div>'+
+      '<div class="bh" title="'+fullHash+(shortParent?'\nParent: '+b.parentHash:'')+'">'+
+        '<a href="https://etherscan.io/block/'+num+'" target="_blank">'+shortHash+'</a>'+
+        (shortParent?'<span style="opacity:.3;margin-left:6px;font-size:7px">← '+shortParent+'</span>':'')+
+      '</div>'+
+      '<div class="bt">'+txs+'</div>'+
+      '<div class="ba">'+agoStr+'</div>'+
+      '<div class="bl-link"><a href="https://etherscan.io/block/'+num+'" target="_blank">↗</a></div>'+
+    '</div>';
+  }).filter(Boolean).join('');
+  $('eth-blk-feed').innerHTML=html||'<div class="err">Parse error</div>';
+}
+
+// ═══════════════════════════════════════════════════════
+//  BLOCKSTREAM — BTC BLOCKS (CORS-open, no key)
+// ═══════════════════════════════════════════════════════
+async function fetchBtcBlocks(){
+  try{
+    // Get tip height
+    var tipRes=await fetch(BS_BASE+'/blocks/tip/height');
+    if(!tipRes.ok) throw new Error('HTTP '+tipRes.status);
+    var tipHeight=parseInt(await tipRes.text());
+    if(isNaN(tipHeight)) throw new Error('Bad tip height');
+
+    set('btc-blk','#'+tipHeight.toLocaleString());
+
+    // Difficulty epoch
+    var epochBlock=tipHeight%2016;
+    set('btc-diff-epoch', epochBlock.toLocaleString()+' / 2016');
+
+    // Fetch recent blocks list from Blockstream
+    var blkRes=await fetch(BS_BASE+'/blocks');
+    if(!blkRes.ok) throw new Error('Blocks HTTP '+blkRes.status);
+    var blocks=await blkRes.json();
+
+    btcBlocks=blocks;
+    set('btc-blk-sub',(blocks[0]?blocks[0].tx_count:'?')+' txs in latest');
+
+    // Rolling average block time from actual timestamps
+    var avgBlockSec=600; // 10min fallback
+    if(blocks.length>=2){
+      var newest=blocks[0].timestamp, oldest=blocks[blocks.length-1].timestamp;
+      if(newest&&oldest&&newest>oldest) avgBlockSec=(newest-oldest)/(blocks.length-1);
+    }
+    var avgMin=Math.floor(avgBlockSec/60);
+    var avgSec=Math.round(avgBlockSec%60);
+    set('btc-blktime', avgMin+'m '+(avgSec<10?'0':'')+avgSec+'s');
+    set('btc-blktime-sub','Rolling avg · '+blocks.length+' blocks');
+
+    // Halving countdown using computed avg block time
+    var HALVING_INTERVAL=210000;
+    var nextHalving=Math.ceil(tipHeight/HALVING_INTERVAL)*HALVING_INTERVAL;
+    var blocksLeft=nextHalving-tipHeight;
+    var daysLeft=((blocksLeft*avgBlockSec)/86400).toFixed(0);
+    set('btc-halving', blocksLeft.toLocaleString()+' blk');
+    set('btc-halving-sub','~'+daysLeft+' days (block #'+nextHalving.toLocaleString()+')');
+
+    renderBtcBlocks(blocks);
+    drawNodeGraph('btc', blocks);
+    st('bs-status','OK','var(--accent)');
+  } catch(e){
+    console.error('BTC blocks:',e);
+    $('btc-blk-feed').innerHTML='<div class="err">'+e.message+'</div>';
+    st('bs-status','ERR','var(--accent2)');
+  }
+}
+
+function renderBtcBlocks(blocks){
+  if(!blocks||!blocks.length){ $('btc-blk-feed').innerHTML='<div class="err">No blocks</div>'; return; }
+  var now=Date.now()/1000;
+  var html=blocks.map(function(b,i){
+    var num=b.height;
+    var ts=b.timestamp||b.time;
+    if(num==null||!ts) return '';
+    var ago=Math.max(0,Math.floor(now-ts));
+    var agoStr=ago<60?ago+'s':ago<3600?Math.floor(ago/60)+'m':Math.floor(ago/3600)+'h '+Math.floor((ago%3600)/60)+'m';
+    var txs=b.tx_count||'?';
+    var fullHash=b.id||'';
+    var shortHash=fullHash?fullHash.slice(0,16)+'…':'—';
+    var prevId=b.previousblockhash||'';
+    var shortPrev=prevId?prevId.slice(0,10)+'…':'';
+    return '<div class="blk-row-btc'+(i===0?' fresh':'')+'">'+
+      '<div class="bn"><a href="https://blockstream.info/block/'+fullHash+'" target="_blank" style="color:var(--btc)">#'+num.toLocaleString()+'</a></div>'+
+      '<div class="bh" title="'+fullHash+(prevId?'\nParent: '+prevId:'')+'">'+
+        '<a href="https://blockstream.info/block/'+fullHash+'" target="_blank">'+shortHash+'</a>'+
+        (shortPrev?'<span style="opacity:.3;margin-left:6px;font-size:7px">← '+shortPrev+'</span>':'')+
+      '</div>'+
+      '<div class="bt">'+txs+'</div>'+
+      '<div class="ba">'+agoStr+'</div>'+
+      '<div class="bl-link"><a href="https://blockstream.info/block/'+fullHash+'" target="_blank">↗</a></div>'+
+    '</div>';
+  }).filter(Boolean).join('');
+  $('btc-blk-feed').innerHTML=html||'<div class="err">Parse error</div>';
+}
+
+// ═══════════════════════════════════════════════════════
+//  FETCH ALL
+// ═══════════════════════════════════════════════════════
+async function fetchAll(){
+  fetchFxRates();
+  fetchPrices();
+  fetchCharts();
+  fetchMarkets();
+  fetchStables();
+  fetchEthBlocks();
+  fetchBtcBlocks();
+  fetchGas();
+  fetchDefiYields();
+  fetchBaseBlocks();
+}
+
+// Stagger startup — FX first so all conversions are correct from the start
+fetchFxRates();
+setTimeout(fetchPrices,    200);
+setTimeout(fetchCharts,    400);
+setTimeout(fetchMarkets,   800);
+setTimeout(fetchStables,  1300);
+setTimeout(fetchEthBlocks, 500);
+setTimeout(fetchBtcBlocks,1000);
+setTimeout(fetchGas,      3000);  // delayed to avoid Etherscan rate limit at startup
+setTimeout(fetchDefiYields,1600);
+setTimeout(fetchBaseBlocks,1100);
+
+// Refresh intervals
+setInterval(fetchPrices,    60000);
+setInterval(fetchCharts,   300000);
+setInterval(fetchMarkets,  120000);
+setInterval(fetchStables,   90000);
+setInterval(fetchFxRates,  300000);
+setInterval(fetchEthBlocks, 14000);
+setInterval(fetchBtcBlocks, 60000);
+setInterval(fetchGas,       15000);
+setInterval(fetchDefiYields,300000);
+setInterval(fetchBaseBlocks, 10000);
+
+// Redraw charts on resize
+var resizeTimer;
+window.addEventListener('resize',function(){
+  clearTimeout(resizeTimer);
+  resizeTimer=setTimeout(function(){
+    if(sparkData['bitcoin'])  drawChart('btc-chart','btc-ylabels',sparkData['bitcoin'], sparkTimes['bitcoin']);
+    if(sparkData['ethereum']) drawChart('eth-chart','eth-ylabels',sparkData['ethereum'],sparkTimes['ethereum']);
+    if(sparkData['solana'])   drawChart('sol-chart','sol-ylabels',sparkData['solana'],  sparkTimes['solana']);
+    if(ethBlocks.length) drawNodeGraph('eth',ethBlocks);
+    if(btcBlocks.length) drawNodeGraph('btc',btcBlocks);
+  },200);
+});
+</script>
+</body>
+</html>
