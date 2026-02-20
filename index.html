@@ -1885,38 +1885,98 @@ function renderStableSupply(stables){
 var gasData = {}; // {slow, std, fast} in Gwei
 var stablesCache = []; // cached so currency switch can re-render without network
 
+// -------------------------------------------------------
+//  GAS — public Ethereum JSON-RPC (no key, CORS-open)
+//  Primary:  cloudflare-eth.com
+//  Fallback: rpc.ankr.com/eth
+//  Both return baseFeePerGas + gasUsedRatio via eth_feeHistory
+//  which gives accurate EIP-1559 slow/std/fast tiers.
+// -------------------------------------------------------
+function deriveGasFromBlocks(blocks){
+  // Also try to read baseFeePerGas from Etherscan block data if present
+  if(!blocks||!blocks.length) return;
+  var fees=[];
+  for(var i=0;i<Math.min(3,blocks.length);i++){
+    var b=blocks[i];
+    if(b.baseFeePerGas&&typeof b.baseFeePerGas==='string'&&b.baseFeePerGas.startsWith('0x')){
+      fees.push(parseInt(b.baseFeePerGas,16)/1e9);
+    }
+  }
+  if(!fees.length) return; // Etherscan didn't include baseFeePerGas — fetchGas will handle it
+  var baseFee=fees.reduce(function(s,f){return s+f;},0)/fees.length;
+  gasData={
+    slow: Math.round((baseFee+0.5)*10)/10,
+    std:  Math.round((baseFee+2.0)*10)/10,
+    fast: Math.round((baseFee+5.0)*10)/10,
+    base: Math.round(baseFee*10)/10,
+    source:'blocks',
+  };
+  console.log('Gas from Etherscan block headers: baseFee='+baseFee.toFixed(3)+' Gwei');
+  renderGas();
+}
+
 async function fetchGas(){
+  // If we already got accurate data from block headers, skip
+  if(gasData.source==='blocks'||gasData.source==='rpc'){ renderGas(); return; }
+
   var ok=false;
 
-  // Primary: Etherscan eth_gasPrice — fires at 3s after startup so blocks are done
-  try{
-    var r=await fetch(ES_BASE+'?chainid=1&module=proxy&action=eth_gasPrice&apikey='+ES_KEY);
-    if(r.ok){
-      var d=await r.json();
-      var hex=d&&d.result;
-      if(hex&&typeof hex==='string'&&hex.startsWith('0x')){
-        var wei=parseInt(hex,16);
-        if(wei>0){
-          var gwei=wei/1e9;
-          gasData={ slow:Math.round(gwei*0.8*10)/10, std:Math.round(gwei*10)/10,
-                    fast:Math.round(gwei*1.3*10)/10, base:Math.round(gwei*0.75*10)/10 };
-          ok=true;
-          console.log('Gas from Etherscan: '+gwei.toFixed(2)+' Gwei');
-        }
-      } else {
-        console.warn('Etherscan gas non-hex result:',hex);
-      }
-    }
-  } catch(e){ console.warn('Etherscan gas failed:',e); }
+  // Try public Ethereum RPC endpoints — no key, CORS-open from file://
+  // eth_feeHistory gives baseFee + priority fee percentiles = accurate tiers
+  var RPC_BODY=JSON.stringify({
+    jsonrpc:'2.0',id:1,method:'eth_feeHistory',
+    params:['0x5','latest',[25,50,75]]  // 5 blocks, percentiles for slow/std/fast
+  });
+  var RPC_OPTS={method:'POST',headers:{'Content-Type':'application/json'},body:RPC_BODY};
+  var RPC_URLS=['https://cloudflare-eth.com','https://rpc.ankr.com/eth'];
 
-  // Fallback: show estimated placeholder so page always renders
-  if(!ok){
-    console.warn('Gas API failed — showing 10 Gwei placeholder');
-    gasData={ slow:8, std:10, fast:13, base:7, placeholder:true };
-    ok=true;
+  for(var ri=0;ri<RPC_URLS.length&&!ok;ri++){
+    try{
+      var r=await fetch(RPC_URLS[ri],RPC_OPTS);
+      if(!r.ok) continue;
+      var d=await r.json();
+      var fh=d&&d.result;
+      if(!fh||!fh.baseFeePerGas||!fh.baseFeePerGas.length) continue;
+
+      // baseFeePerGas: array newest-last. Last entry = next block's base fee (most accurate)
+      var baseFeeHex=fh.baseFeePerGas[fh.baseFeePerGas.length-1];
+      var baseFee=parseInt(baseFeeHex,16)/1e9;
+
+      // reward[i] = [p25, p50, p75] priority fees for block i
+      var tips25=[], tips50=[], tips75=[];
+      if(fh.reward){
+        fh.reward.forEach(function(r){
+          if(r[0]) tips25.push(parseInt(r[0],16)/1e9);
+          if(r[1]) tips50.push(parseInt(r[1],16)/1e9);
+          if(r[2]) tips75.push(parseInt(r[2],16)/1e9);
+        });
+      }
+      var avg=function(arr){ return arr.length?arr.reduce(function(a,b){return a+b;})/arr.length:0; };
+      var tipSlow=Math.max(0.1, avg(tips25));
+      var tipStd =Math.max(0.5, avg(tips50));
+      var tipFast=Math.max(1.0, avg(tips75));
+
+      gasData={
+        slow: Math.round((baseFee+tipSlow)*10)/10,
+        std:  Math.round((baseFee+tipStd)*10)/10,
+        fast: Math.round((baseFee+tipFast)*10)/10,
+        base: Math.round(baseFee*10)/10,
+        source:'rpc',
+        rpcUrl:RPC_URLS[ri],
+      };
+      ok=true;
+      console.log('Gas from '+RPC_URLS[ri]+': baseFee='+baseFee.toFixed(3)+
+        ' slow='+gasData.slow+' std='+gasData.std+' fast='+gasData.fast+' Gwei');
+    } catch(e){ console.warn('RPC gas failed ('+RPC_URLS[ri]+'):',e); }
   }
 
-  if(ok) renderGas();
+  // Last resort placeholder — never shown if RPC works
+  if(!ok){
+    gasData={ slow:8, std:10, fast:13, base:7, placeholder:true };
+    console.warn('All gas sources failed — showing placeholder');
+  }
+
+  if(gasData.std) renderGas();
 }
 
 function renderGas(){
@@ -1947,8 +2007,12 @@ function renderGas(){
   // Tier display
   var maxGas=g.fast||1;
   // Show note if using placeholder data
-  if(g.placeholder){
-    var gsh=$('gas-page-sub'); if(gsh) gsh.textContent='⚠ Gas APIs unavailable — showing estimated values';
+  var gsh=$('gas-page-sub');
+  if(gsh){
+    if(g.placeholder)       gsh.textContent='⚠ Estimated — live gas sources unavailable';
+    else if(g.source==='rpc')    gsh.textContent='Live · eth_feeHistory via '+g.rpcUrl.replace('https://','');
+    else if(g.source==='blocks') gsh.textContent='Live · Derived from Etherscan block headers';
+    else                         gsh.textContent='Live · Ethereum mainnet gas price';
   }
   set('gas-slow', g.slow.toFixed(1));
   set('gas-std',  g.std.toFixed(1));
@@ -2268,6 +2332,9 @@ async function fetchEthBlocks(){
     renderEthBlocks(blocks);
     drawNodeGraph('eth', blocks);
     st('es-status','OK','var(--accent)');
+
+    // Derive live gas price from block baseFeePerGas — zero extra API calls
+    deriveGasFromBlocks(blocks);
   } catch(e){
     console.error('ETH blocks:',e);
     $('eth-blk-feed').innerHTML='<div class="err">'+e.message+'</div>';
@@ -2409,7 +2476,7 @@ setTimeout(fetchMarkets,   800);
 setTimeout(fetchStables,  1300);
 setTimeout(fetchEthBlocks, 500);
 setTimeout(fetchBtcBlocks,1000);
-setTimeout(fetchGas,      3000);  // delayed to avoid Etherscan rate limit at startup
+setTimeout(fetchGas, 500); // Public RPC gas — fast, independent of Etherscan
 setTimeout(fetchDefiYields,1600);
 setTimeout(fetchBaseBlocks,1100);
 
