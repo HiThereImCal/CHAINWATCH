@@ -312,7 +312,7 @@ footer a:hover{opacity:.9;}
   }
   .currency-switcher{ gap:2px; }
   .cur-btn{ font-size:7px; padding:3px 5px; letter-spacing:1px; }
-  .font-size-ctrl{ display:none; }   /* A+/A− not useful on mobile */
+  .font-size-ctrl{ display:none; }
   #clock{ display:none; }
   .live-pill{ font-size:7px; }
   .by-cal-btn{ font-size:7px; padding:3px 6px; }
@@ -358,7 +358,7 @@ footer a:hover{opacity:.9;}
   }
   .mob-tab-ico{ font-size:14px; line-height:1; }
 
-  /* ── CONTENT — add padding for fixed bottom tabs ── */
+  /* ── CONTENT ── */
   .content{
     padding:12px 10px 72px;
     overflow-y:auto;
@@ -367,7 +367,8 @@ footer a:hover{opacity:.9;}
   }
 
   /* ── GRIDS ── */
-  .g2{ grid-template-columns:1fr 1fr; }
+  /* FIX: .g2 goes single-column so overview bottom panels stack properly */
+  .g2{ grid-template-columns:1fr; }
   .g3{ grid-template-columns:1fr 1fr; }
   .g4{ grid-template-columns:1fr 1fr; }
 
@@ -376,59 +377,66 @@ footer a:hover{opacity:.9;}
   .tv.sm{ font-size:16px; }
   .tile{ padding:10px 11px; }
 
-  /* ── CHARTS ── */
-  .chart-canvas{ height:100px; }
+  /* ── CHARTS — FIX: CSS height must match JS H constant (90px) ── */
+  .chart-wrap{ margin-top:8px; }
+  .chart-canvas{ height:90px; }
+  /* Hide y-axis labels on mobile — too cramped */
+  .chart-y-labels{ display:none; }
 
   /* ── NODE GRAPH ── */
-  .node-graph-wrap{ height:150px; }
+  .node-graph-wrap{ height:140px; }
 
-  /* ── BLOCK FEEDS — drop hash column on mobile ── */
+  /* ── BLOCK FEEDS — show height/txs/age only ── */
   .blk-hdr,.blk-row{
-    grid-template-columns:75px 1fr 45px 40px;
+    grid-template-columns:70px 50px 42px;
     padding:6px 8px;
     font-size:8px;
+    gap:5px;
   }
-  /* hide hash column (2nd child) */
-  .blk-hdr>div:nth-child(2),
-  .blk-row>div:nth-child(2){ display:none; }
+  /* hide hash (col2) and view-link (col5) — only height/txs/age visible */
+  .blk-hdr>div:nth-child(2),.blk-row>div:nth-child(2),
+  .blk-hdr>div:nth-child(5),.blk-row>div:nth-child(5){ display:none; }
   .bl-link{ display:none; }
 
   .blk-hdr-btc,.blk-row-btc{
-    grid-template-columns:70px 1fr 50px 42px;
+    grid-template-columns:65px 50px 42px;
     padding:6px 8px;
     font-size:8px;
+    gap:5px;
   }
-  .blk-hdr-btc>div:nth-child(2),
-  .blk-row-btc>div:nth-child(2){ display:none; }
+  .blk-hdr-btc>div:nth-child(2),.blk-row-btc>div:nth-child(2),
+  .blk-hdr-btc>div:nth-child(5),.blk-row-btc>div:nth-child(5){ display:none; }
 
   .blk-hdr-base,.blk-row-base{
-    grid-template-columns:70px 1fr 50px 42px;
+    grid-template-columns:65px 50px 42px;
     padding:6px 8px;
     font-size:8px;
+    gap:5px;
   }
-  .blk-hdr-base>div:nth-child(2),
-  .blk-row-base>div:nth-child(2){ display:none; }
+  .blk-hdr-base>div:nth-child(2),.blk-row-base>div:nth-child(2),
+  .blk-hdr-base>div:nth-child(5),.blk-row-base>div:nth-child(5){ display:none; }
 
-  /* ── MARKETS TABLE — keep rank/name/price/change, drop mcap+vol ── */
+  /* ── MARKETS TABLE — FIX: tighter columns that actually fit portrait ── */
+  /* Keep: rank(18px) | name(1fr) | price(minmax) | 24h(56px) */
+  /* Hide: market cap (col5), volume (col6) */
   .mkt-hdr,.mkt-row{
-    grid-template-columns:20px 1fr 90px 70px;
-    padding:7px 10px;
-    font-size:9px;
-    gap:6px;
+    grid-template-columns:18px 1fr minmax(72px,auto) 56px;
+    padding:6px 8px;
+    font-size:8px;
+    gap:5px;
   }
-  .mkt-hdr>div:nth-child(5),
-  .mkt-hdr>div:nth-child(6),
-  .mkt-row>div:nth-child(5),
-  .mkt-row>div:nth-child(6){ display:none; }
+  .mkt-hdr>div:nth-child(5),.mkt-hdr>div:nth-child(6),
+  .mkt-row>div:nth-child(5),.mkt-row>div:nth-child(6){ display:none; }
+  .mr-nm{ font-size:9px; }
+  .mr-tk{ display:none; } /* hide ticker badge — name is enough */
 
   /* ── STABLECOIN MONITOR ── */
   .mon-row{
-    grid-template-columns:1fr 80px 70px;
-    padding:8px 10px;
+    grid-template-columns:1fr 78px 68px;
+    padding:7px 8px;
     font-size:9px;
-    gap:6px;
+    gap:5px;
   }
-  /* hide 4th and 5th columns */
   .mon-row>div:nth-child(4),
   .mon-row>div:nth-child(5){ display:none; }
 
@@ -438,32 +446,43 @@ footer a:hover{opacity:.9;}
 
   /* ── GAS TRACKER ── */
   .gas-tier{ grid-template-columns:1fr; gap:8px; }
-  .gas-tier .gas-tile:nth-child(2){ order:-1; } /* put Standard first */
-  .g.g3#gas-ops-grid{ grid-template-columns:1fr 1fr; }
+  .gas-tier .gas-tile:nth-child(2){ order:-1; }
+  .gas-ops{ grid-template-columns:1fr 1fr; }
 
-  /* ── DEFI YIELDS ── */
+  /* ── DEFI YIELDS — FIX: yield-row numbers were getting squeezed ── */
   .yield-compare{ grid-template-columns:1fr; }
+  /* Give yield-row more breathing room — hide the bar, show name + pct + tag */
+  .yield-row{
+    gap:6px;
+  }
+  .yield-bar-wrap{ display:none; } /* hide bar on mobile — too cramped */
+  .yield-pct{
+    width:auto;
+    min-width:36px;
+    flex-shrink:0;
+    font-size:10px;
+  }
+  .yield-tag{ flex-shrink:0; }
+
+  /* DeFi full table — FIX: simplify to 3 cols: asset | APY | risk */
+  /* Hide type (col2) and notes (col5) */
   .defi-table-hdr,.defi-table-row{
-    grid-template-columns:1fr 70px 70px 60px;
+    grid-template-columns:1fr 64px 48px;
     padding:6px 8px;
     font-size:8px;
     gap:6px;
   }
-  /* hide last column (notes) */
-  .defi-table-hdr>div:last-child,
-  .defi-table-row>div:last-child{ display:none; }
-  .yield-bar-wrap{ width:50px; min-width:30px; }
+  .defi-table-hdr>div:nth-child(2),.defi-table-row>div:nth-child(2),
+  .defi-table-hdr>div:last-child,.defi-table-row>div:last-child{ display:none; }
 
   /* ── SECTION HEADERS ── */
   .sh{ margin-top:14px; flex-wrap:wrap; }
   .sh-sub{ font-size:7px; }
 
   /* ── FOOTER ── */
-  footer{
-    display:none; /* hidden on mobile — bottom tabs replace nav */
-  }
+  footer{ display:none; }
 
-  /* ── API RESET (shown via bottom tab) ── */
+  /* ── API RESET ── */
   .api-reset-panel{ display:none; }
 }
 
@@ -1355,7 +1374,11 @@ function drawChart(canvasId, yLblId, prices, times){
   }
 
   var dpr=window.devicePixelRatio||1;
-  var W=cv.parentElement.offsetWidth||300, H=140;
+  var W=cv.parentElement.offsetWidth||300;
+  // Read H from CSS-rendered height so mobile (90px) and desktop (140px) both work
+  var H=cv.offsetHeight||140;
+  // If canvas hasn't been laid out yet fall back to CSS var
+  if(H<10) H=(window.innerWidth<=768)?90:140;
   cv.style.width=W+'px'; cv.style.height=H+'px';
   cv.width=W*dpr; cv.height=H*dpr;
   var ctx=cv.getContext('2d'); ctx.scale(dpr,dpr);
