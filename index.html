@@ -449,19 +449,46 @@ footer a:hover{opacity:.9;}
   .gas-tier .gas-tile:nth-child(2){ order:-1; }
   .gas-ops{ grid-template-columns:1fr 1fr; }
 
-  /* ── DEFI YIELDS — FIX: yield-row numbers were getting squeezed ── */
+  /* ── DEFI YIELDS ── */
   .yield-compare{ grid-template-columns:1fr; }
-  /* Give yield-row more breathing room — hide the bar, show name + pct + tag */
+
+  /* Force row — no stacking, no wrapping */
   .yield-row{
+    display:flex;
+    flex-direction:row;
+    flex-wrap:nowrap;
+    align-items:center;
     gap:6px;
+    min-width:0;
   }
-  .yield-bar-wrap{ display:none; } /* hide bar on mobile — too cramped */
+
+  /* Name: clip, hide the small note subtitle */
+  .yield-name{
+    flex:1;
+    min-width:0;
+    overflow:hidden;
+    white-space:nowrap;
+    text-overflow:ellipsis;
+  }
+  .yield-name span:last-child{ display:none !important; }
+  .yield-name span:first-child{
+    display:inline !important;
+    white-space:nowrap;
+  }
+
+  /* Bar hidden — not enough room */
+  .yield-bar-wrap{ display:none; }
+
+  /* Pct: always visible, never shrinks */
   .yield-pct{
-    width:auto;
-    min-width:36px;
     flex-shrink:0;
+    width:auto;
+    min-width:34px;
+    text-align:right;
     font-size:10px;
   }
+
+  /* Tag badge */
   .yield-tag{ flex-shrink:0; }
 
   /* DeFi full table — FIX: simplify to 3 cols: asset | APY | risk */
