@@ -367,9 +367,9 @@ footer a:hover{opacity:.9;}
   }
 
   /* ── GRIDS ── */
-  /* FIX: .g2 goes single-column so overview bottom panels stack properly */
+  /* .g2 and .g3 single-col: overview panels + price charts stack vertically */
   .g2{ grid-template-columns:1fr; }
-  .g3{ grid-template-columns:1fr 1fr; }
+  .g3{ grid-template-columns:1fr; }
   .g4{ grid-template-columns:1fr 1fr; }
 
   /* ── TILES ── */
@@ -1476,17 +1476,21 @@ function drawNodeGraph(chain, blocks){
   var chainColGlow = chain==='eth' ? 'rgba(98,126,234,' : 'rgba(247,147,26,';
 
   // Build node layout — right to left (newest on right)
-  var N=blocks.length;
-  var nodeR=22, spacing=Math.min(140, (W-80)/N);
-  var startX=W-50, cy=H/2;
-  var nodes=blocks.map(function(b,i){
+  // On narrow screens: shrink radius and cap at 5 nodes so they don't overlap
+  var isMobNarrow = W < 500;
+  var nodeR   = isMobNarrow ? 14 : 22;
+  var maxNodes= isMobNarrow ?  5 : blocks.length;
+  var visBlocks = blocks.slice(0, maxNodes);
+  var N=visBlocks.length;
+  var spacing=Math.min(140, (W - nodeR*4) / Math.max(N-1,1));
+  var startX=W-nodeR*2, cy=H/2;
+  var nodes=visBlocks.map(function(b,i){
     return {
       x: startX - i*spacing,
       y: cy,
       r: nodeR,
       block: b,
       idx: i,
-      // animation phase
       phase: i*0.4,
     };
   });
@@ -1526,12 +1530,14 @@ function drawNodeGraph(chain, blocks){
       var last=nodes[nodes.length-1];
       ctx.save();
       ctx.setLineDash([3,4]);
-      ctx.beginPath(); ctx.moveTo(last.x-last.r,last.y); ctx.lineTo(last.x-last.r-30,last.y);
+      var tailLen=isMobNarrow?18:30;
+      ctx.beginPath(); ctx.moveTo(last.x-last.r,last.y); ctx.lineTo(last.x-last.r-tailLen,last.y);
       ctx.strokeStyle=chainColGlow+'0.25)'; ctx.lineWidth=1.5; ctx.stroke();
       ctx.setLineDash([]);
       ctx.restore();
       ctx.fillStyle=chainColGlow+'0.3)';
-      ctx.font='9px Share Tech Mono'; ctx.fillText('…',last.x-last.r-40,last.y+4);
+      ctx.font=(isMobNarrow?'7':'9')+'px Share Tech Mono';
+      ctx.fillText('…',last.x-last.r-(isMobNarrow?24:40),last.y+4);
     }
 
     // Draw nodes
@@ -1561,17 +1567,17 @@ function drawNodeGraph(chain, blocks){
 
       // Block number text
       var blkNum = n.block.height!==undefined ? n.block.height : (parseInt(n.block.number,16)||'?');
-      var label='#'+String(blkNum).slice(-4); // last 4 digits to fit
+      var label='#'+String(blkNum).slice(isMobNarrow?-3:-4);
       ctx.fillStyle=isHov?chainCol:chainColGlow+'0.7)';
-      ctx.font=(isHov?'bold ':'')+'8px Share Tech Mono';
+      ctx.font=(isHov?'bold ':'')+(isMobNarrow?'7':'8')+'px Share Tech Mono';
       ctx.textAlign='center'; ctx.textBaseline='middle';
       ctx.fillText(label,n.x,ny);
 
       // "NEW" badge on freshest block
       if(i===0){
-        ctx.font='6px Share Tech Mono';
+        ctx.font=(isMobNarrow?'5':'6')+'px Share Tech Mono';
         ctx.fillStyle='rgba(0,245,196,0.7)';
-        ctx.fillText('NEW',n.x,ny-n.r-6);
+        ctx.fillText('NEW',n.x,ny-n.r-(isMobNarrow?4:6));
       }
 
       // Store screen y for hit detection
